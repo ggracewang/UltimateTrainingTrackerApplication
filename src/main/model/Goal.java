@@ -37,17 +37,17 @@ public class Goal {
         return ""; //stub
     }
 
-    // EFFECTS: returns title of the goal
+    // EFFECTS: returns description of the goal
     public String getDescription() {
         return ""; //stub
     }
 
-    // EFFECTS: returns title of the goal
-    public String getCompletionDate() {
+    // EFFECTS: returns completion date of the goal
+    public Date getCompletionDate() {
         return null; //stub
     }
 
-    // EFFECTS: returns title of the goal
+    // EFFECTS: returns completion status of the goal
     public boolean getCompletionStatus() {
         return false; //stub
     }

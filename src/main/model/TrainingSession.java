@@ -2,13 +2,13 @@ package model;
 
 public class TrainingSession {
 
-    // EFFECTS: constructs a training session with no date, duration, skills
+    // EFFECTS: constructs a training session with no date, duration (in mins), skills
     //          practiced, and notes
     public TrainingSession() {
         //TODO
     } 
 
-    // REQUIRES: Date is ahead of current date
+    // REQUIRES: newDate != null
     // MODIFIES: this
     // EFFECTS: sets the training session's date to new, given date
     public void setDate(Date newDate) {

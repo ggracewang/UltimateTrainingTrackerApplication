@@ -13,7 +13,14 @@ public class GoalLog {
     // REQUIRES: goal != null
     // MODIFIES: this
     // EFFECTS: adds the goal to the goal log (list)
-    public void addGoal() {
+    public void addGoal(Goal goal) {
+        //TODO
+    }
+
+    // REQUIRES: goal != null
+    // MODIFIES: this
+    // EFFECTS: removes the goal from the goal log (list) if the goal is in goal log
+    public void removeGoal(String goalTitle) {
         //TODO
     }
 

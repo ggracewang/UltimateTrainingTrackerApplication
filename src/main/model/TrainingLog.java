@@ -6,7 +6,7 @@ import java.util.List;
 public class TrainingLog {
 
 
-    // EFFECTS: constructs new training log with no training sessions
+    // EFFECTS: constructs new training log with no training sessions, and zero total duration
     public TrainingLog() {
         //TODO
     }
@@ -18,8 +18,15 @@ public class TrainingLog {
         //TODO
     }
 
-    // EFFECTS: returns list of 
-    public List<TrainingSession> viewTrainingLog() {
+    // REQUIRES: training session != null
+    // MODIFIES: this
+    // EFFECTS: removes the given training session from the trainingLog list if there is one
+    public void removeSession(TrainingSession session) {
+        //TODO
+    }
+
+    // EFFECTS: returns list of of training sessions logged
+    public List<TrainingSession> getTrainingLog() {
         return null; //stub
     }
 

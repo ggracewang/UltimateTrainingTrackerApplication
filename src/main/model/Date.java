@@ -7,7 +7,7 @@ public class Date {
 
     }
 
-    // REQUIRES: date != null
+    // REQUIRES: 31 >= day > 0, 12 >= month > 0, year > current year
     // EFFECTS: sets date to new, given date
     public void setDate(int day, int month, int year) {
         //TODO
@@ -25,7 +25,7 @@ public class Date {
     }
 
     // EFFECTS: returns the month 
-    public int getMonthStringInFormat() {
+    public int getMonthInStringFormat() {
         return 0; //stub
     }
 
