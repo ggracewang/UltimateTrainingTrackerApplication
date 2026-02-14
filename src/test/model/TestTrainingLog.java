@@ -84,6 +84,14 @@ public class TestTrainingLog {
         assertFalse(testTrainingLog.getTrainingLog().contains(session1));
         assertEquals(135, testTrainingLog.getTotalDurationPracticed());
 
+        TrainingSession newSession = new TrainingSession();
+        testTrainingLog.removeSession(newSession); // session that isn't in training log (nothing changes)
+        assertEquals(2, testTrainingLog.getTrainingLog().size());
+        assertEquals(session2, testTrainingLog.getTrainingLog().get(0));
+        assertEquals(session3, testTrainingLog.getTrainingLog().get(1));
+        assertFalse(testTrainingLog.getTrainingLog().contains(session1));
+        assertEquals(135, testTrainingLog.getTotalDurationPracticed());
+
         testTrainingLog.removeSession(session3);
         assertEquals(1, testTrainingLog.getTrainingLog().size());
         assertEquals(session2, testTrainingLog.getTrainingLog().get(0));
@@ -91,7 +99,7 @@ public class TestTrainingLog {
         assertFalse(testTrainingLog.getTrainingLog().contains(session3));
         assertEquals(90, testTrainingLog.getTotalDurationPracticed());
 
-        testTrainingLog.removeSession(session3);//no more sessions 
+        testTrainingLog.removeSession(session2);//no more sessions 
         assertTrue(testTrainingLog.getTrainingLog().isEmpty());
         assertEquals(0, testTrainingLog.getTrainingLog().size());
         assertFalse(testTrainingLog.getTrainingLog().contains(session1));

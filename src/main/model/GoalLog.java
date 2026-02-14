@@ -4,33 +4,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GoalLog {
+    private List<Goal> goalLog;
 
-    // EFFECTS: constructs new goal log with no goals added yet and no completed goals
+    // EFFECTS: constructs new goal log with no goals added yet
     public GoalLog() {
-        //TODO
+        goalLog = new ArrayList<>();
     }
 
     // REQUIRES: goal != null
     // MODIFIES: this
-    // EFFECTS: adds the goal to the goal log (list)
+    // EFFECTS: adds the goal to the goal log (list) if not already in
     public void addGoal(Goal goal) {
-        //TODO
+        if (!goalLog.contains(goal)) {
+            goalLog.add(goal);
+        }
+        
     }
 
     // REQUIRES: goal != null
     // MODIFIES: this
     // EFFECTS: removes the goal from the goal log (list) if the goal is in goal log
     public void removeGoal(String goalTitle) {
-        //TODO
+        for (int i = 0; i < goalLog.size(); i++) {
+            if (goalLog.get(i).getTitle().equals(goalTitle)) {
+                goalLog.remove(i);
+                break;
+            }
+        }
     }
 
     // EFFECTS: return all completed goals
     public List<Goal> getCompletedGoals() {
-        return null; //stub
+        List<Goal> completedGoals = new ArrayList<>();
+        for (Goal g: goalLog) {
+            if (g.getCompletionStatus() == true) {
+                completedGoals.add(g);
+            }
+        }
+        return completedGoals; 
     }
 
     // EFFECTS: return all goals in goal log
     public List<Goal> getAllGoals() {
-        return null; //stub
+        return goalLog; //stub
     }
 }

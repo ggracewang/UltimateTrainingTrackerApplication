@@ -1,7 +1,6 @@
 package model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,7 +69,7 @@ public class TestDate {
     void testConstructorMonthWith31Days() {
         Date jan31 = new Date(31, 1, 2023);
         assertEquals(31, jan31.getDay());
-        assertEquals(4, jan31.getMonth());
+        assertEquals(1, jan31.getMonth());
     }
 
     @Test
@@ -90,31 +89,53 @@ public class TestDate {
 
     @Test
     void testGetYear() {
-        assertEquals(2024, testDate1.getDay()); 
-        assertEquals(2023, testDate2.getDay()); 
-        assertEquals(2025, testDate3.getDay()); 
+        assertEquals(2024, testDate1.getYear()); 
+        assertEquals(2023, testDate2.getYear()); 
+        assertEquals(2025, testDate3.getYear()); 
     }
 
     @Test
     void testSetDate() {
-        testDate1.setDate(11, 23, 2030);
+        testDate1.setDate(23, 11, 2030);
         assertEquals(23, testDate1.getDay()); 
-        assertEquals(11, testDate2.getMonth()); 
-        assertEquals(2030, testDate3.getYear()); 
+        assertEquals(11, testDate1.getMonth()); 
+        assertEquals(2030, testDate1.getYear()); 
     }
 
     @Test
-    void testGetMonthInStringFormat() {
-        assertEquals("April", testDate1.getMonthInStringFormat()); 
-        assertEquals("January", testDate2.getMonthInStringFormat());
-         assertEquals("December", testDate3.getMonthInStringFormat());
-    }
+    void testGetMonthInStringFormatAllMonths() {
+    Date jan = new Date(1, 1, 2024);
+    Date feb = new Date(1, 2, 2024);
+    Date mar = new Date(1, 3, 2024);
+    Date apr = new Date(1, 4, 2024);
+    Date may = new Date(1, 5, 2024);
+    Date jun = new Date(1, 6, 2024);
+    Date jul = new Date(1, 7, 2024);
+    Date aug = new Date(1, 8, 2024);
+    Date sep = new Date(1, 9, 2024);
+    Date oct = new Date(1, 10, 2024);
+    Date nov = new Date(1, 11, 2024);
+    Date dec = new Date(1, 12, 2024);
+    
+    assertEquals("January", jan.getMonthInStringFormat());
+    assertEquals("February", feb.getMonthInStringFormat());
+    assertEquals("March", mar.getMonthInStringFormat());
+    assertEquals("April", apr.getMonthInStringFormat());
+    assertEquals("May", may.getMonthInStringFormat());
+    assertEquals("June", jun.getMonthInStringFormat());
+    assertEquals("July", jul.getMonthInStringFormat());
+    assertEquals("August", aug.getMonthInStringFormat());
+    assertEquals("September", sep.getMonthInStringFormat());
+    assertEquals("October", oct.getMonthInStringFormat());
+    assertEquals("November", nov.getMonthInStringFormat());
+    assertEquals("December", dec.getMonthInStringFormat());
+}
 
     @Test
     void testGetFullDateInStringFormat() {
-        assertEquals("4/16/2024", testDate1.getFullDateInStringFormat()); 
+        assertEquals("6/15/2024", testDate1.getFullDateInStringFormat()); 
         assertEquals("1/1/2023", testDate2.getFullDateInStringFormat());
-        assertEquals("12/31/2025", testDate3.getMonthInStringFormat()); 
+        assertEquals("12/31/2025", testDate3.getFullDateInStringFormat()); 
     }
 
     @Test

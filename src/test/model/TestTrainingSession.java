@@ -57,7 +57,7 @@ public class TestTrainingSession {
 
         //set duration of a session again
         testSession2.setDuration(300);
-        assertEquals(300, testSession2.getDate());
+        assertEquals(300, testSession2.getDuration());
 
     }
 
@@ -66,7 +66,7 @@ public class TestTrainingSession {
         testSession1.setSkills("skill 1, skill 2");
         testSession2.setSkills(""); //no skills specified
 
-        assertEquals("skill 1,, skill 2", testSession1.getSkills());
+        assertEquals("skill 1, skill 2", testSession1.getSkills());
         assertEquals("", testSession2.getSkills());
 
         //set skill of a session again
@@ -83,7 +83,7 @@ public class TestTrainingSession {
         assertEquals("", testSession2.getNotes());
 
         //set date of a session again, with special characters
-        testSession1.setSkills("new notes: / $ @");
+        testSession1.setNotes("new notes: / $ @");
         assertEquals("new notes: / $ @", testSession1.getNotes());
     }
 

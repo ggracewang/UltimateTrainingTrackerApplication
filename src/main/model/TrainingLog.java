@@ -4,35 +4,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TrainingLog {
+    private List<TrainingSession> trainingLog;
 
-
-    // EFFECTS: constructs new training log with no training sessions, and zero total duration
+    // EFFECTS: constructs new training log with no training sessions
     public TrainingLog() {
-        //TODO
+        trainingLog = new ArrayList<>();
     }
 
     // REQUIRES: training session != null
     // MODIFIES: this
     // EFFECTS: adds the given training session to the trainingLog list
     public void addSession(TrainingSession session) {
-        //TODO
+        trainingLog.add(session);
     }
 
     // REQUIRES: training session != null
     // MODIFIES: this
     // EFFECTS: removes the given training session from the trainingLog list if there is one
     public void removeSession(TrainingSession session) {
-        //TODO
+        for (int i = 0; i < trainingLog.size(); i++) {
+            if (trainingLog.get(i) == session) {
+                trainingLog.remove(i);
+            }
+        }
     }
 
     // EFFECTS: returns list of of training sessions logged
     public List<TrainingSession> getTrainingLog() {
-        return null; //stub
+        return trainingLog; 
     }
 
     // EFFECTS: returns the total duration practiced of all sessions in training log
     public int getTotalDurationPracticed() {
-        return 0; //stub
+        int totalDuration = 0;
+        for (TrainingSession s: trainingLog) {
+            totalDuration += s.getDuration();
+        }
+        return totalDuration;
     }
 
     

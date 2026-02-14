@@ -32,7 +32,7 @@ public class TestGoal {
     void testConstructor() {
         //standard case:
         assertEquals("Master huck", testGoal1.getTitle());
-        assertEquals("Throw 50 meters consistently", testGoal1.getDescription());
+        assertEquals("Throw 50 meters consistently.", testGoal1.getDescription());
         assertEquals(date1, testGoal1.getCompletionDate());
         assertFalse(testGoal1.getCompletionStatus()); 
 
@@ -48,16 +48,16 @@ public class TestGoal {
     void testSetTitle() {
         //only title changes
         testGoal1.setTitle("Improve forehand");
-        assertEquals("improve forhand", testGoal1.getTitle());
-        assertEquals("Throw 50 meters consistently", testGoal1.getDescription());
+        assertEquals("Improve forehand", testGoal1.getTitle());
+        assertEquals("Throw 50 meters consistently.", testGoal1.getDescription());
         assertEquals(date1, testGoal1.getCompletionDate());
         assertFalse(testGoal1.getCompletionStatus()); 
 
         //title set to empty
         testGoal1.setTitle("");
         assertEquals("", testGoal1.getTitle());
-        assertEquals("Throw 50 meters consistently", testGoal1.getDescription());
-        assertEquals(date3, testGoal1.getCompletionDate());
+        assertEquals("Throw 50 meters consistently.", testGoal1.getDescription());
+        assertEquals(date1, testGoal1.getCompletionDate());
         assertFalse(testGoal1.getCompletionStatus());
     }
 
@@ -66,7 +66,7 @@ public class TestGoal {
         //*only description changes
         testGoal2.setDescription("test description");
         assertEquals("Improve vertical", testGoal2.getTitle());
-        assertEquals("test description 1", testGoal2.getDescription());
+        assertEquals("test description", testGoal2.getDescription());
         assertEquals(date2, testGoal2.getCompletionDate());
         assertFalse(testGoal2.getCompletionStatus()); 
 
@@ -83,14 +83,14 @@ public class TestGoal {
         //*only date changes
         testGoal2.setCompletionDate(date3);
         assertEquals("Improve vertical", testGoal2.getTitle());
-        assertEquals("Increase jump by 5cm", testGoal2.getDescription());
+        assertEquals("Increase jump by 5cm.", testGoal2.getDescription());
         assertEquals(date3, testGoal2.getCompletionDate());
         assertFalse(testGoal2.getCompletionStatus()); 
 
         Date newDate = new Date(13, 2, 2028);
         testGoal2.setCompletionDate(newDate);
         assertEquals("Improve vertical", testGoal2.getTitle());
-        assertEquals("Increase jump by 5cm", testGoal2.getDescription());
+        assertEquals("Increase jump by 5cm.", testGoal2.getDescription());
         assertEquals(newDate, testGoal2.getCompletionDate());
         assertFalse(testGoal2.getCompletionStatus()); 
 
@@ -102,7 +102,7 @@ public class TestGoal {
         //standard case:
         testGoal1.markCompleted();
         assertEquals("Master huck", testGoal1.getTitle());
-        assertEquals("Throw 50 meters consistently", testGoal1.getDescription());
+        assertEquals("Throw 50 meters consistently.", testGoal1.getDescription());
         assertEquals(date1, testGoal1.getCompletionDate());
         assertTrue(testGoal1.getCompletionStatus()); 
 
@@ -111,6 +111,6 @@ public class TestGoal {
         assertEquals("", testGoal3.getTitle());
         assertEquals("", testGoal3.getDescription());
         assertEquals(date3, testGoal3.getCompletionDate());
-        assertTrue(testGoal3.getCompletionStatus());
+        assertTrue(testGoal2.getCompletionStatus());
     }
 }

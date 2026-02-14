@@ -54,6 +54,12 @@ public class TestGoalLog {
         assertEquals(goal1, testGoalLog.getAllGoals().get(0));
         assertEquals(goal2, testGoalLog.getAllGoals().get(1));
         assertEquals(goal3, testGoalLog.getAllGoals().get(2));
+
+        testGoalLog.addGoal(goal1); //add goal that's already in goal log
+        assertEquals(3, testGoalLog.getAllGoals().size());
+        assertEquals(goal1, testGoalLog.getAllGoals().get(0));
+        assertEquals(goal2, testGoalLog.getAllGoals().get(1));
+        assertEquals(goal3, testGoalLog.getAllGoals().get(2));
     }
 
     @Test
@@ -64,6 +70,12 @@ public class TestGoalLog {
 
         testGoalLog.removeGoal("Improve vertical");
 
+        assertEquals(2, testGoalLog.getAllGoals().size());
+        assertEquals(goal1, testGoalLog.getAllGoals().get(0));
+        assertEquals(goal3, testGoalLog.getAllGoals().get(1));
+
+        Goal newGoal = new Goal("67", "67676767", date1);
+        testGoalLog.removeGoal("67"); // remove goal that isn't in goal log
         assertEquals(2, testGoalLog.getAllGoals().size());
         assertEquals(goal1, testGoalLog.getAllGoals().get(0));
         assertEquals(goal3, testGoalLog.getAllGoals().get(1));
@@ -88,13 +100,13 @@ public class TestGoalLog {
 
         goal1.markCompleted();
         assertEquals(2, testGoalLog.getCompletedGoals().size());
-        assertEquals(goal2, testGoalLog.getCompletedGoals().get(0));
-        assertEquals(goal1, testGoalLog.getCompletedGoals().get(1));
+        assertEquals(goal1, testGoalLog.getCompletedGoals().get(0));
+        assertEquals(goal2, testGoalLog.getCompletedGoals().get(1));
 
         goal3.markCompleted();
         assertEquals(3, testGoalLog.getCompletedGoals().size());
-        assertEquals(goal2, testGoalLog.getCompletedGoals().get(0));
-        assertEquals(goal1, testGoalLog.getCompletedGoals().get(1));
+        assertEquals(goal1, testGoalLog.getCompletedGoals().get(0));
+        assertEquals(goal2, testGoalLog.getCompletedGoals().get(1));
         assertEquals(goal3, testGoalLog.getCompletedGoals().get(2));
 
 

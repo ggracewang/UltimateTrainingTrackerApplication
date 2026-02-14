@@ -1,55 +1,62 @@
 package model;
 
 public class Goal {
-
+    private String title;
+    private String description;
+    private Date date;
+    private Boolean completionStatus;
+    
     // EFFECTS: constructs a new Goal with given title, description, completion date, 
     //          and set completion status to false
     public Goal(String title, String description, Date date) {
-        //TODO
+        this.title = title;
+        this.description = description;
+        this.date = date;
+        this.completionStatus = false;
     }
 
-        // MODIFIES: this
+    // MODIFIES: this
     // EFFECTS: sets the goal's title to new, given title
     public void setTitle(String title) {
-        //TODO
+        this.title = title;
     }
 
     // MODIFIES: this
     // EFFECTS: sets the goal's description to new, given description
     public void setDescription(String description) {
-        //TODO
+        this.description = description;
     }
 
     // MODIFIES: this
     // EFFECTS: sets the goal's completion date to new, given date
     public void setCompletionDate(Date date) {
-        //TODO
+        this.date = date;
     }
 
     // MODIFIES: this
-    // EFFECTS: marks a goal as completed by setting completion status to false
+    // EFFECTS: marks a goal as completed by setting completion status to true
     public void markCompleted() {
-        //TODO
+        this.completionStatus = true;
     }
 
     // EFFECTS: returns title of the goal
     public String getTitle() {
-        return ""; //stub
+        return title; 
     }
 
     // EFFECTS: returns description of the goal
     public String getDescription() {
-        return ""; //stub
+        return description; 
     }
 
     // EFFECTS: returns completion date of the goal
     public Date getCompletionDate() {
-        return null; //stub
+        return date; 
     }
 
     // EFFECTS: returns completion status of the goal
     public boolean getCompletionStatus() {
-        return false; //stub
+        return completionStatus; 
     }
 
 
