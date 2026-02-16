@@ -23,7 +23,7 @@ public class TestGoal {
         date3 = new Date(11, 23, 2028);
 
         testGoal1 = new Goal("Master huck", "Throw 50 meters consistently.", date1);
-        testGoal2= new Goal("Improve vertical", "Increase jump by 5cm.", date2);
+        testGoal2 = new Goal("Improve vertical", "Increase jump by 5cm.", date2);
         testGoal3 = new Goal("", "", date3); //boundary case, empty
     }
 

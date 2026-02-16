@@ -31,37 +31,6 @@ public class Date {
         return month; //stub
     }
 
-    // EFFECTS: returns the month 
-    public String getMonthInStringFormat() {
-        String stringMonth = "";
-        if (month == 1) {
-            stringMonth = "January";
-        } else if (month == 2) {
-            stringMonth = "February";
-        } else if (month == 3) {
-            stringMonth = "March";
-        } else if (month == 4) {
-            stringMonth = "April";
-        } else if (month == 5) {
-            stringMonth = "May";
-        } else if (month == 6) {
-            stringMonth = "June";
-        } else if (month == 7) {
-            stringMonth = "July";
-        } else if (month == 8) {
-            stringMonth = "August";
-        } else if (month == 9) {
-            stringMonth = "September";
-        } else if (month == 10) {
-            stringMonth = "October";
-        } else if (month == 11) {
-            stringMonth = "November";
-        } else {
-            stringMonth = "December";
-        }
-        return stringMonth;
-    }
-
     // EFFECTS: returns the year
     public int getYear() {
         return year;

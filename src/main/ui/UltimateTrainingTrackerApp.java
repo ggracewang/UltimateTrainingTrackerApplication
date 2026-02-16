@@ -1,5 +1,8 @@
 package ui;
+
 import model.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -13,12 +16,11 @@ public class UltimateTrainingTrackerApp {
         init();
 
         printDivider();
-
         System.out.println("Welcome to the Ultimate Training Tracker!");
         printDivider();
 
         while (this.isProgramRunning) {
-            handleMenu();
+            handleHomeMenu();
         }
 
     }
@@ -33,65 +35,84 @@ public class UltimateTrainingTrackerApp {
     }
 
     // MODIFIES: this
-    // EFFECTS: displays and process inputs for the main menu
-    public void handleMenu() {
-        displayMenu();
+    // EFFECTS: displays and process inputs for the main/home menu
+    public void handleHomeMenu() {
+        displayHomeMenu();
         String input = this.scanner.nextLine();
-        processMenuCommands(input);
+        processHomeMenuCommands(input);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: displays and process inputs for the goal log menu
+    public void handleGoalLogMenu() {
+        displayGoalLogMenu();
+        String input = this.scanner.nextLine();
+        processGoalLogMenuCommands(input);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: displays and process inputs for the training log menu
+    public void handleTrainingLogMenu() {
+        displayTrainingLogMenu();
+        String input = this.scanner.nextLine();
+        processTrainingLogMenuCommands(input);
     }
 
     // EFFECTS: displays list of commands that can be used in main menu
-    public void displayMenu() {
-        System.out.println("\nPlease select and option\n");
+    public void displayHomeMenu() {
+        System.out.println("\nHOME MENU");
+        System.out.println("\nPlease select an option below:\n");
+        System.out.println("T: Manage Training Log");
+
+        System.out.println("G: Manage Goal Log");
+    
+        System.out.println("X: Exit the application");
+        printDivider();
+    }
+
+
+    // EFFECTS: displays list of commands that can be used in main menu
+    public void displayGoalLogMenu() {
         System.out.println("Manage Training Log:");
+        System.out.println("\nPlease select an option below.\n");
         System.out.println("a: Add a new goal");
         System.out.println("v: View all goals");
         System.out.println("c: View all completed goals");
         System.out.println("m: Mark a goal as completed");
         System.out.println("d: Delete a goal");
 
-        System.out.println("\nManage Goal Log:\n");
-        System.out.println("s: Add a training session");
-        System.out.println("l: View all training sessions");
+        System.out.println("b: Go back to Home menu");
+
+        System.out.println("x: Exit the application");
+        printDivider();
+    }
+
+    // EFFECTS: displays list of commands that can be used in main menu
+    public void displayTrainingLogMenu() {
+        System.out.println("\nManage Training Log:\n");
+        System.out.println("\nPlease select an option below.\n");
+        System.out.println("a: Add a training session");
+        System.out.println("v: View all training sessions");
         System.out.println("r: Remove a training session");
         System.out.println("t: View total training time");
+
+        System.out.println("b: Go back to Home menu");
 
         System.out.println("x: Exit the application");
         printDivider();
     }
 
     // EFFECTS: processes the user's input in the main menu
-    public void processMenuCommands(String input) {
+    public void processHomeMenuCommands(String input) { 
         printDivider();
-        switch(input) {
-            case "a":
-                addNewGoal();
+        switch (input) {
+            case "T":
+                handleTrainingLogMenu();
                 break;
-            case "v":
-                viewAllGoals();
+            case "G":
+                handleGoalLogMenu();
                 break;
-            case "c":
-                viewCompletedGoals();
-                break;
-            case "m":
-                markGoalAsCompleted();
-                break;
-            case "d":
-                deleteGoal();
-                break;
-            case "s":
-                addTrainingSession();
-                break;
-            case "l":
-                viewAllTrainingSessions();
-                break;
-            case "r":
-                removeTrainingSession();
-                break;
-            case "t":
-                viewTotalTrainingTime();
-                break;
-            case "x":
+            case "X":
                 quitApplication();
                 break;
             default: 
@@ -101,6 +122,52 @@ public class UltimateTrainingTrackerApp {
         printDivider();
     }
 
+    // EFFECTS: processes the user's input in the training log menu
+    public void processTrainingLogMenuCommands(String input) { 
+        printDivider();
+        switch (input) {
+            case "a": addTrainingSession();
+                break;
+            case "v": viewAllTrainingSessions();
+                break;
+            case "r": removeTrainingSession();
+                break;
+            case "t": viewTotalTrainingTime();
+                break;
+            case "b": handleHomeMenu();
+                break;
+            case "x": quitApplication();
+                break;
+            default: 
+                System.out.println("Invalid option inputted. Please try again.");    
+        }  
+    }
+
+    // EFFECTS: processes the user's input in the goal log menu
+    public void processGoalLogMenuCommands(String input) { 
+        printDivider();
+        switch (input) {
+            case "a": addNewGoal();
+                break;
+            case "v": viewAllGoals();
+                break;
+            case "c": viewCompletedGoals();
+                break;
+            case "m": markGoalAsCompleted();
+                break;
+            case "d": deleteGoal();
+                break;
+            case "b": handleHomeMenu();
+                break;
+            case "x": quitApplication();
+                break;
+            default: 
+                System.out.println("Invalid option inputted. Please try again.");            
+        }
+        
+    }
+
+    // REQUIRES: the characters inputted for the day, month, year must be numbers(specifically integers)
     //MODIFIES: this
     // EFFECTS: adds a new goal to the goal log
     public void addNewGoal() {
@@ -137,7 +204,7 @@ public class UltimateTrainingTrackerApp {
             System.out.println("ALL GOALS: ");
             System.out.println();
             for (int i = 0; i < goalLog.getAllGoals().size(); i++) {
-                displayGoalDetails(goalLog.getAllGoals().get(i), i+1);
+                displayGoalDetails(goalLog.getAllGoals().get(i), i + 1);
             }
         }
     }
@@ -152,7 +219,7 @@ public class UltimateTrainingTrackerApp {
             System.out.println("COMPLETED GOALS: ");
             System.out.println();
             for (int i = 0; i < completedGoals.size(); i++) {
-                displayGoalDetails(completedGoals.get(i), i+1);
+                displayCompletedGoalDetails(completedGoals.get(i), i + 1);
             }
         }
     }
@@ -163,8 +230,28 @@ public class UltimateTrainingTrackerApp {
         System.out.println("   Title: " + goal.getTitle());
         System.out.println("   Description: " + goal.getDescription());
         System.out.println("   Target Date: " + goal.getCompletionDate().getFullDateInStringFormat());
-        System.out.println("   Status: " + goal.getCompletionStatus());
+        System.out.println("   Completion Status: " + printCompletionStatus(goal));
         System.out.println();
+    }
+
+
+    // displays the details of a given goal
+    public void displayCompletedGoalDetails(Goal goal, int num) {
+        System.out.println("Goal #" + num);
+        System.out.println("   Title: " + goal.getTitle());
+        System.out.println("   Description: " + goal.getDescription());
+        System.out.println("   Target Date: " + goal.getCompletionDate().getFullDateInStringFormat());
+        System.out.println("   Completion Status: " + printCompletionStatus(goal));
+        System.out.println();
+    }
+
+    // EFFECTS: prints incomplete/complete if completion status is true/false
+    public String printCompletionStatus(Goal goal) {
+        String status = "Incomplete";
+        if (goal.getCompletionStatus() == true) {
+            status = "Complete";
+        }
+        return status;
     }
 
     //MODIFIES: this
@@ -172,11 +259,11 @@ public class UltimateTrainingTrackerApp {
     public void markGoalAsCompleted() {
         List<Goal> goals = goalLog.getAllGoals();
 
-        if (goals.isEmpty()) {
-            System.out.println("No goals available. Try adding a goal first!");
+        if (goals.isEmpty() || getUncompletedGoals().isEmpty()) {
+            System.out.println("No goals to mark complete. Try adding a goal first!");
         } else {
             System.out.println("Available goals:");
-            displayGoalTitles();
+            displayUncompletedGoalTitles();
             System.out.println("\nPlease enter the title of the goal you completed: ");
             String title = this.scanner.nextLine();
 
@@ -184,15 +271,34 @@ public class UltimateTrainingTrackerApp {
             for (Goal g: goals) {
                 if (g.getTitle().equals(title)) {
                     g.markCompleted();
-                    System.out.println("CONGRATS! This goal is completed!");
+                    System.out.println("\nCONGRATS! This goal was completed on " 
+                            + getDateCompleted().getFullDateInStringFormat() + ".");
                     found = true;
                     break;
                 }
             }
             if (found == false) {
+                printDivider();
                 System.out.println("Error: Goal not found. Please check the title and try again.");
             }
         }
+    }
+    
+    // REQUIRES: the characters inputted for the day, month, year must be numbers
+    // EFFECTS: gets the day, month, year user completed a goal, returns the date
+    public Date getDateCompleted() {
+        System.out.println("ENTER THE DAY YOU COMPLETED THIS GOAL (1-31): ");
+        int day = Integer.parseInt(this.scanner.nextLine());
+
+        System.out.println("ENTER THE MONTH YOU COMPLETED THIS GOAL (1-12): ");
+        int month = Integer.parseInt(this.scanner.nextLine());
+
+        System.out.println("ENTER THE YEAR YOUR COMPLETED THIS GOAL: ");
+        int year = Integer.parseInt(this.scanner.nextLine());
+
+        Date dateCompleted = new Date(day, month, year);
+        return dateCompleted;
+
     }
 
     //MODIFIES: this
@@ -221,6 +327,32 @@ public class UltimateTrainingTrackerApp {
         }
     }
 
+    // EFFECTS: displays the titles of uncomplete goals
+    public void displayUncompletedGoalTitles() {
+        List<Goal> goals = goalLog.getAllGoals();
+        for (int i = 0; i < goals.size(); i++) {
+            if (goals.get(i).getCompletionStatus() == false) {
+                System.out.println("   " + (i + 1) + ". " + goals.get(i).getTitle());
+            }
+            
+        }
+
+    }
+
+    // EFFECTS: returns list of uncompleted goals
+    public List<Goal> getUncompletedGoals() {
+        List<Goal> goals = goalLog.getAllGoals();
+        List<Goal> completedGoals = new ArrayList<>();
+        for (int i = 0; i < goals.size(); i++) {
+            if (goals.get(i).getCompletionStatus() == false) {
+                completedGoals.add(goals.get(i));
+            }
+            
+        }
+        return completedGoals;
+    }
+
+    // REQUIRES: the characters inputted for the day, month, year must be numbers
     // MODIFIES: this
     // EFFECTS: adds a new training session to the training log
     public void addTrainingSession() {
@@ -266,7 +398,7 @@ public class UltimateTrainingTrackerApp {
             System.out.println("ALL TRAINING SESSIONS: ");
             System.out.println();
             for (int i = 0; i < sessions.size(); i++) {
-                displaySessionDetails(sessions.get(i), i+1);
+                displaySessionDetails(sessions.get(i), i + 1);
             }
         }
     }
@@ -274,7 +406,7 @@ public class UltimateTrainingTrackerApp {
 
     // EFFECTS: displays the details of a given training session
     public void displaySessionDetails(TrainingSession session, int num) {
-        System.out.println("Session#" + num);
+        System.out.println("Session #" + num);
         System.out.println("   Date: " + session.getDate().getFullDateInStringFormat());
         System.out.println("   Duration: " + session.getDuration() + " minutes");
         System.out.println("   Skills Practiced: " + session.getSkills());
@@ -339,7 +471,7 @@ public class UltimateTrainingTrackerApp {
 
     // EFFECTS: prints a line of dashes to act like divider
     private void printDivider() {
-        System.out.println("-----------------------------------------------");
+        System.out.println("------------------------------------------------------------------");
     }
 
 }

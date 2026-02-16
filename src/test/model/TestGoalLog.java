@@ -27,7 +27,7 @@ public class TestGoalLog {
         date3 = new Date(11, 23, 2028);
 
         goal1 = new Goal("Master huck", "Throw 50 meters consistently.", date1);
-        goal2= new Goal("Improve vertical", "Increase jump by 5cm.", date2);
+        goal2 = new Goal("Improve vertical", "Increase jump by 5cm.", date2);
         goal3 = new Goal("", "", date3); //boundary case, empty
     }
 
@@ -74,7 +74,6 @@ public class TestGoalLog {
         assertEquals(goal1, testGoalLog.getAllGoals().get(0));
         assertEquals(goal3, testGoalLog.getAllGoals().get(1));
 
-        Goal newGoal = new Goal("67", "67676767", date1);
         testGoalLog.removeGoal("67"); // remove goal that isn't in goal log
         assertEquals(2, testGoalLog.getAllGoals().size());
         assertEquals(goal1, testGoalLog.getAllGoals().get(0));

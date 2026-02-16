@@ -32,9 +32,9 @@ As an active ultimate player myself who started not long ago, I've struggled to 
 ## **USER STORIES**
 - As a user, I want to be able to add a training session to my training log with date, duration, drills & skills practiced, and notes
 - As a user, I want to be able to remove a training session from a training log
-- As a user, I want to be able to view all my training sessions in chronological order
-- As a user, I want to be able to view my total training hours for the current month
+- As a user, I want to be able to view all my training sessions in order they were added to the training log
+- As a user, I want to be able to view my total training hours
 - As a user, I want to be able to add a goal to my goal tracker with a description and target completion date 
 - As a user, I want to be able to mark a goal as completed
 - As a user, I want to be able to view all my goals in my goal log
-- As a user, I want to be able to view all my achievements (goals completed + total practice duration)
+- As a user, I want to be able to view all my completed goals 

@@ -102,34 +102,6 @@ public class TestDate {
         assertEquals(2030, testDate1.getYear()); 
     }
 
-    @Test
-    void testGetMonthInStringFormatAllMonths() {
-    Date jan = new Date(1, 1, 2024);
-    Date feb = new Date(1, 2, 2024);
-    Date mar = new Date(1, 3, 2024);
-    Date apr = new Date(1, 4, 2024);
-    Date may = new Date(1, 5, 2024);
-    Date jun = new Date(1, 6, 2024);
-    Date jul = new Date(1, 7, 2024);
-    Date aug = new Date(1, 8, 2024);
-    Date sep = new Date(1, 9, 2024);
-    Date oct = new Date(1, 10, 2024);
-    Date nov = new Date(1, 11, 2024);
-    Date dec = new Date(1, 12, 2024);
-    
-    assertEquals("January", jan.getMonthInStringFormat());
-    assertEquals("February", feb.getMonthInStringFormat());
-    assertEquals("March", mar.getMonthInStringFormat());
-    assertEquals("April", apr.getMonthInStringFormat());
-    assertEquals("May", may.getMonthInStringFormat());
-    assertEquals("June", jun.getMonthInStringFormat());
-    assertEquals("July", jul.getMonthInStringFormat());
-    assertEquals("August", aug.getMonthInStringFormat());
-    assertEquals("September", sep.getMonthInStringFormat());
-    assertEquals("October", oct.getMonthInStringFormat());
-    assertEquals("November", nov.getMonthInStringFormat());
-    assertEquals("December", dec.getMonthInStringFormat());
-}
 
     @Test
     void testGetFullDateInStringFormat() {

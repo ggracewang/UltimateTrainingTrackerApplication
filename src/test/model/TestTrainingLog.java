@@ -7,12 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
 public class TestTrainingLog {
 
     private TrainingLog testTrainingLog;
 
-    private TrainingSession session1; 
+    private TrainingSession session1;
     private TrainingSession session2;
     private TrainingSession session3;
 
@@ -34,7 +33,7 @@ public class TestTrainingLog {
         session2.setDuration(90);
         session2.setNotes("Evening practice");
         session2.setSkills("Defense");
-        
+
         session3 = new TrainingSession();
         session3.setDate(date3);
         session3.setDuration(45);
@@ -56,7 +55,7 @@ public class TestTrainingLog {
 
     @Test
     void testAddSession() {
-        assertEquals(0, testTrainingLog.getTotalDurationPracticed()); //no sessions added yet
+        assertEquals(0, testTrainingLog.getTotalDurationPracticed()); // no sessions added yet
         assertTrue(testTrainingLog.getTrainingLog().isEmpty());
 
         testTrainingLog.addSession(session1);
@@ -65,58 +64,82 @@ public class TestTrainingLog {
 
         testTrainingLog.addSession(session2);
         testTrainingLog.addSession(session3);
-        assertEquals(3, testTrainingLog.getTrainingLog().size()); //multiple sessions
+        assertEquals(3, testTrainingLog.getTrainingLog().size()); // multiple sessions
         assertEquals(session1, testTrainingLog.getTrainingLog().get(0));
         assertEquals(session2, testTrainingLog.getTrainingLog().get(1));
         assertEquals(session3, testTrainingLog.getTrainingLog().get(2));
     }
 
     @Test
-    void testRemoveSession() {
+    void testRemoveExistingSession() {
         testTrainingLog.addSession(session1);
         testTrainingLog.addSession(session2);
         testTrainingLog.addSession(session3);
 
         testTrainingLog.removeSession(session1);
+
         assertEquals(2, testTrainingLog.getTrainingLog().size());
         assertEquals(session2, testTrainingLog.getTrainingLog().get(0));
         assertEquals(session3, testTrainingLog.getTrainingLog().get(1));
         assertFalse(testTrainingLog.getTrainingLog().contains(session1));
         assertEquals(135, testTrainingLog.getTotalDurationPracticed());
+    }
+
+    @Test
+    void testRemoveSessionNotInLog() {
+        testTrainingLog.addSession(session1);
+        testTrainingLog.addSession(session2);
+        testTrainingLog.addSession(session3);
 
         TrainingSession newSession = new TrainingSession();
-        testTrainingLog.removeSession(newSession); // session that isn't in training log (nothing changes)
-        assertEquals(2, testTrainingLog.getTrainingLog().size());
-        assertEquals(session2, testTrainingLog.getTrainingLog().get(0));
-        assertEquals(session3, testTrainingLog.getTrainingLog().get(1));
-        assertFalse(testTrainingLog.getTrainingLog().contains(session1));
-        assertEquals(135, testTrainingLog.getTotalDurationPracticed());
+        testTrainingLog.removeSession(newSession);
 
+        assertEquals(3, testTrainingLog.getTrainingLog().size());
+        assertEquals(session1, testTrainingLog.getTrainingLog().get(0));
+        assertEquals(session2, testTrainingLog.getTrainingLog().get(1));
+        assertEquals(session3, testTrainingLog.getTrainingLog().get(2));
+    }
+
+    @Test
+    void testRemoveMultipleSessions() {
+        testTrainingLog.addSession(session1);
+        testTrainingLog.addSession(session2);
+        testTrainingLog.addSession(session3);
+
+        testTrainingLog.removeSession(session1);
         testTrainingLog.removeSession(session3);
+
         assertEquals(1, testTrainingLog.getTrainingLog().size());
         assertEquals(session2, testTrainingLog.getTrainingLog().get(0));
         assertFalse(testTrainingLog.getTrainingLog().contains(session1));
         assertFalse(testTrainingLog.getTrainingLog().contains(session3));
         assertEquals(90, testTrainingLog.getTotalDurationPracticed());
+    }
 
-        testTrainingLog.removeSession(session2);//no more sessions 
+    @Test
+    void testRemoveAllSessions() {
+        testTrainingLog.addSession(session1);
+        testTrainingLog.addSession(session2);
+        testTrainingLog.addSession(session3);
+
+        testTrainingLog.removeSession(session1);
+        testTrainingLog.removeSession(session2);
+        testTrainingLog.removeSession(session3);
+
         assertTrue(testTrainingLog.getTrainingLog().isEmpty());
         assertEquals(0, testTrainingLog.getTrainingLog().size());
-        assertFalse(testTrainingLog.getTrainingLog().contains(session1));
-        assertFalse(testTrainingLog.getTrainingLog().contains(session2));
-        assertFalse(testTrainingLog.getTrainingLog().contains(session3));
         assertEquals(0, testTrainingLog.getTotalDurationPracticed());
     }
 
     @Test
     void testGetTotalDurationPracticed() {
-        assertEquals(0, testTrainingLog.getTotalDurationPracticed()); //no sessions added yet
+        assertEquals(0, testTrainingLog.getTotalDurationPracticed()); // no sessions added yet
 
         testTrainingLog.addSession(session1);
-        assertEquals(60, testTrainingLog.getTotalDurationPracticed()); //one session
+        assertEquals(60, testTrainingLog.getTotalDurationPracticed()); // one session
 
         testTrainingLog.addSession(session2);
         testTrainingLog.addSession(session3);
-        assertEquals(195, testTrainingLog.getTotalDurationPracticed()); //multiple sessions
+        assertEquals(195, testTrainingLog.getTotalDurationPracticed()); // multiple sessions
     }
 }
