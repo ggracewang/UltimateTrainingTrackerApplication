@@ -38,3 +38,5 @@ As an active ultimate player myself who started not long ago, I've struggled to 
 - As a user, I want to be able to mark a goal as completed
 - As a user, I want to be able to view all my goals in my goal log
 - As a user, I want to be able to view all my completed goals 
+- As a user, I want to be able to save my training log and goal log to file (if I choose to)
+- As a user, I want to be able to load my training log and goal log from file (if I choose to)
