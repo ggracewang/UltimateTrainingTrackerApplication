@@ -22,6 +22,7 @@ public class UltimateTrainingTrackerApp {
     private boolean isProgramRunning;
     private static final String JSON_STORE = "./data/trainingtracker.json";
     private JsonReader jsonReader;
+    private JsonWriter jsonWriter;
 
     public UltimateTrainingTrackerApp() {
         init();
@@ -44,6 +45,7 @@ public class UltimateTrainingTrackerApp {
         this.scanner = new Scanner(System.in);
         this.isProgramRunning = true;
         this.jsonReader = new JsonReader(JSON_STORE);
+        this.jsonWriter = new JsonWriter(JSON_STORE);
     }
 
     // MODIFIES: this
@@ -76,6 +78,7 @@ public class UltimateTrainingTrackerApp {
         System.out.println("\nPlease select an option below:\n");
         System.out.println("T: Manage Training Log");
         System.out.println("G: Manage Goal Log");
+        System.out.println("S: Save data to file"); 
         System.out.println("L: Load data from file"); 
         System.out.println("X: Exit the application");
         printDivider();
@@ -123,6 +126,9 @@ public class UltimateTrainingTrackerApp {
                 break;
             case "G":
                 handleGoalLogMenu();
+                break;
+            case "S":
+                saveData();
                 break;
             case "L":
                 loadData();
@@ -487,6 +493,11 @@ public class UltimateTrainingTrackerApp {
     // EFFECTS: prints a line of dashes to act like divider
     private void printDivider() {
         System.out.println("------------------------------------------------------------------");
+    }
+
+    // EFFECTS: saves the training log and goal log to file
+    private void saveData() {
+        // stub
     }
 
     // MODIFIES: this
