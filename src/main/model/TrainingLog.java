@@ -3,6 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class TrainingLog {
     private List<TrainingSession> trainingLog;
 
@@ -43,6 +46,14 @@ public class TrainingLog {
         return totalDuration;
     }
 
-    
+    // EFFECTS: returns this training log as a JSON object
+    public JSONObject toJson() {
+        return null;  // stub
+    }
+
+    // EFFECTS: returns training sessions in this log as a JSON array
+    private JSONArray sessionsToJson() {
+        return null;  // stub
+    }
 
 }

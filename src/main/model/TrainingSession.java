@@ -1,5 +1,7 @@
 package model;
 
+import org.json.JSONObject;
+
 public class TrainingSession {
     private Date date;
     private Integer duration;
@@ -62,5 +64,9 @@ public class TrainingSession {
         return skills; 
     }
 
+    // EFFECTS: returns this training session as a JSON object
+    public JSONObject toJson() {
+        return null;  // stub
+    }
 
 }

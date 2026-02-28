@@ -5,12 +5,23 @@ import model.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import persistence.JsonReader;
+import persistence.JsonWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+// Referenced from JsonSerializationDemo
+// https://github.students.cs.ubc.ca/CPSC210/JsonSerializationDemo
+
+// Referenced from Lab 4: Flashcard Reviewer Application
 
 public class UltimateTrainingTrackerApp {
     private GoalLog goalLog;
     private TrainingLog trainingLog;
     private Scanner scanner;
     private boolean isProgramRunning;
+    private static final String JSON_STORE = "./data/trainingtracker.json";
+    private JsonReader jsonReader;
 
     public UltimateTrainingTrackerApp() {
         init();
@@ -32,6 +43,7 @@ public class UltimateTrainingTrackerApp {
         this.trainingLog = new TrainingLog();
         this.scanner = new Scanner(System.in);
         this.isProgramRunning = true;
+        this.jsonReader = new JsonReader(JSON_STORE);
     }
 
     // MODIFIES: this
@@ -63,11 +75,11 @@ public class UltimateTrainingTrackerApp {
         System.out.println("\nHOME MENU");
         System.out.println("\nPlease select an option below:\n");
         System.out.println("T: Manage Training Log");
-
         System.out.println("G: Manage Goal Log");
-    
+        System.out.println("L: Load data from file"); 
         System.out.println("X: Exit the application");
         printDivider();
+
     }
 
 
@@ -111,6 +123,9 @@ public class UltimateTrainingTrackerApp {
                 break;
             case "G":
                 handleGoalLogMenu();
+                break;
+            case "L":
+                loadData();
                 break;
             case "X":
                 quitApplication();
@@ -472,6 +487,12 @@ public class UltimateTrainingTrackerApp {
     // EFFECTS: prints a line of dashes to act like divider
     private void printDivider() {
         System.out.println("------------------------------------------------------------------");
+    }
+
+    // MODIFIES: this
+    // EFFECTS: loads training log and goal log from file
+    private void loadData() {
+        // stub
     }
 
 }

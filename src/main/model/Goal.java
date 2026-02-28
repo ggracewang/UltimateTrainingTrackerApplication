@@ -1,5 +1,7 @@
 package model;
 
+import org.json.JSONObject;
+
 public class Goal {
     private String title;
     private String description;
@@ -59,6 +61,9 @@ public class Goal {
         return completionStatus; 
     }
 
-
+    // EFFECTS: returns this goal as a JSON object
+    public JSONObject toJson() {
+        return null;  // stub
+    }
 
 }

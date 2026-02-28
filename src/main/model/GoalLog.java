@@ -3,6 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class GoalLog {
     private List<Goal> goalLog;
 
@@ -47,5 +50,15 @@ public class GoalLog {
     // EFFECTS: return all goals in goal log
     public List<Goal> getAllGoals() {
         return goalLog; //stub
+    }
+
+    // EFFECTS: returns this goal log as a JSON object
+    public JSONObject toJson() {
+        return null;  // stub
+    }
+
+    // EFFECTS: returns goals in this log as a JSON array
+    private JSONArray goalsToJson() {
+        return null;  // stub
     }
 }

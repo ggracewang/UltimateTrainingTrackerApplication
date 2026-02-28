@@ -1,5 +1,8 @@
 package model;
 
+import org.json.JSONObject;
+
+
 public class Date {
     private Integer day;
     private Integer month;
@@ -41,5 +44,10 @@ public class Date {
     public String getFullDateInStringFormat() {
         String stringYear = (getMonth() + "/" + getDay() + "/" + getYear());
         return stringYear; 
+    }
+
+    // EFFECTS: returns this date as JSON object
+    public JSONObject toJson() {
+        return null; //stub
     }
 }
