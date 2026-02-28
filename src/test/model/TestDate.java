@@ -2,6 +2,7 @@ package model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -123,4 +124,24 @@ public class TestDate {
         assertEquals(8, futureDate.getMonth());
         assertEquals(2050, futureDate.getYear());
     }
+
+    @Test
+    void testToJson() {
+        JSONObject json = testDate1.toJson();
+    
+        assertEquals(15, json.getInt("day"));
+        assertEquals(6, json.getInt("month"));
+        assertEquals(2024, json.getInt("year"));
+    }
+
+    @Test
+    void testToJsonBoundaryDate() {
+        JSONObject json = testDate2.toJson();
+    
+        assertEquals(1, json.getInt("day"));
+        assertEquals(1, json.getInt("month"));
+        assertEquals(2023, json.getInt("year"));
+    }
+
+
 }

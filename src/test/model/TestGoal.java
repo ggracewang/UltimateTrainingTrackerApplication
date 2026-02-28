@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -112,5 +113,36 @@ public class TestGoal {
         assertEquals("", testGoal3.getDescription());
         assertEquals(date3, testGoal3.getCompletionDate());
         assertTrue(testGoal2.getCompletionStatus());
+    }
+
+    @Test
+    void testToJson() {
+        JSONObject json = testGoal1.toJson();
+        
+        assertEquals("Master huck", json.getString("title"));
+        assertEquals("Throw 50 meters consistently.", json.getString("description"));
+        assertFalse(json.getBoolean("completionStatus"));
+        
+        JSONObject dateJson = json.getJSONObject("date");
+        assertEquals(31, dateJson.getInt("day"));
+        assertEquals(12, dateJson.getInt("month"));
+        assertEquals(2026, dateJson.getInt("year"));
+    }
+
+    @Test
+    void testToJsonCompletedGoal() {
+        testGoal1.markCompleted();
+        JSONObject json = testGoal1.toJson();
+        
+        assertTrue(json.getBoolean("completionStatus"));
+    }
+
+    @Test
+    void testToJsonEmptyFields() {
+        JSONObject json = testGoal3.toJson();
+        
+        assertEquals("", json.getString("title"));
+        assertEquals("", json.getString("description"));
+        assertFalse(json.getBoolean("completionStatus"));
     }
 }

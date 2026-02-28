@@ -1,6 +1,10 @@
 package model;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -141,5 +145,27 @@ public class TestTrainingLog {
         testTrainingLog.addSession(session2);
         testTrainingLog.addSession(session3);
         assertEquals(195, testTrainingLog.getTotalDurationPracticed()); // multiple sessions
+    }
+    
+    @Test
+    void testToJsonEmptyLog() {
+        JSONObject json = testTrainingLog.toJson();
+        JSONArray sessions = json.getJSONArray("sessions");
+        assertEquals(0, sessions.length());
+    }
+
+    @Test
+    void testToJsonWithSessions() {
+        testTrainingLog.addSession(session1);
+        testTrainingLog.addSession(session2);
+        
+        JSONObject json = testTrainingLog.toJson();
+        JSONArray sessions = json.getJSONArray("sessions");
+        
+        assertEquals(2, sessions.length());
+        
+        JSONObject firstSession = sessions.getJSONObject(0);
+        assertEquals(60, firstSession.getInt("duration"));
+        assertEquals("Forehand, Backhand", firstSession.getString("skills"));
     }
 }

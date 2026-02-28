@@ -1,0 +1,50 @@
+{
+  "trainingLog": {
+    "sessions": [
+      {
+        "date": {
+          "day": 15,
+          "month": 1,
+          "year": 2025
+        },
+        "duration": 67,
+        "skills": "Forehand, Backhand",
+        "notes": "skibidi"
+      },
+      {
+        "date": {
+          "day": 16,
+          "month": 1,
+          "year": 2025
+        },
+        "duration": 41,
+        "skills": "Defense",
+        "notes": "Improved"
+      }
+    ]
+  },
+  "goalLog": {
+    "goals": [
+      {
+        "title": "Master huck",
+        "description": "Throw 50 meters",
+        "date": {
+          "day": 31,
+          "month": 12,
+          "year": 2025
+        },
+        "completionStatus": false
+      },
+      {
+        "title": "Improve vertical",
+        "description": "Jump higher",
+        "date": {
+          "day": 30,
+          "month": 6,
+          "year": 2025
+        },
+        "completionStatus": true
+      }
+    ]
+  }
+}

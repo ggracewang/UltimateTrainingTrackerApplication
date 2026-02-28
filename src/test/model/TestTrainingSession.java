@@ -1,6 +1,8 @@
 package model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -85,6 +87,39 @@ public class TestTrainingSession {
         //set date of a session again, with special characters
         testSession1.setNotes("new notes: / $ @");
         assertEquals("new notes: / $ @", testSession1.getNotes());
+    }
+
+    @Test
+    void testToJson() {
+        testSession1.setDate(date1);
+        testSession1.setDuration(60);
+        testSession1.setSkills("Forehand");
+        testSession1.setNotes("Good practice");
+    
+        JSONObject json = testSession1.toJson();
+    
+        assertEquals(67, json.getInt("duration"));
+        assertEquals("Forehand", json.getString("skills"));
+        assertEquals("skibidi", json.getString("notes"));
+    
+        JSONObject dateJson = json.getJSONObject("date");
+        assertEquals(31, dateJson.getInt("day"));
+        assertEquals(12, dateJson.getInt("month"));
+        assertEquals(2026, dateJson.getInt("year"));
+    }
+
+    @Test
+    void testToJsonEmptyFields() {
+        testSession2.setDate(date2);
+        testSession2.setDuration(45);
+        testSession2.setSkills("");
+        testSession2.setNotes("");
+    
+        JSONObject json = testSession2.toJson();
+    
+        assertEquals(45, json.getInt("duration"));
+        assertEquals("", json.getString("skills"));
+        assertEquals("", json.getString("notes"));
     }
 
 }

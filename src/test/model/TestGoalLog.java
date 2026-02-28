@@ -1,6 +1,10 @@
 package model;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -112,8 +116,39 @@ public class TestGoalLog {
     }
 
 
+    @Test
+    void testToJsonEmptyLog() {
+        JSONObject json = testGoalLog.toJson();
+        JSONArray goals = json.getJSONArray("goals");
+        assertEquals(0, goals.length());
+    }
 
+    @Test
+    void testToJsonWithGoals() {
+        testGoalLog.addGoal(goal1);
+        testGoalLog.addGoal(goal2);
+        
+        JSONObject json = testGoalLog.toJson();
+        JSONArray goals = json.getJSONArray("goals");
+        
+        assertEquals(2, goals.length());
+        
+        JSONObject firstGoal = goals.getJSONObject(0);
+        assertEquals("Master huck", firstGoal.getString("title"));
+        assertFalse(firstGoal.getBoolean("completionStatus"));
+    }
 
+    @Test
+    void testToJsonWithCompletedGoals() {
+        goal1.markCompleted();
+        testGoalLog.addGoal(goal1);
+        
+        JSONObject json = testGoalLog.toJson();
+        JSONArray goals = json.getJSONArray("goals");
+        
+        JSONObject firstGoal = goals.getJSONObject(0);
+        assertTrue(firstGoal.getBoolean("completionStatus"));
 
+}
     
 }
