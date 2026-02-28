@@ -22,25 +22,28 @@ public class JsonWriter {
     // EFFECTS: opens writer; throws FileNotFoundException if destination file cannot
     // be opened for writing
     public void open() throws FileNotFoundException {
-        // stub
+        writer = new PrintWriter(new File(destination));
     }
 
     // MODIFIES: this
     // EFFECTS: writes JSON representation of training log and goal log to file
     public void write(TrainingLog tl, GoalLog gl) {
-        // stub
+        JSONObject json = new JSONObject();
+        json.put("trainingLog", tl.toJson());
+        json.put("goalLog", gl.toJson());
+        saveToFile(json.toString(TAB));
     }
 
     // MODIFIES: this
     // EFFECTS: closes writer
     public void close() {
-        // stub
+        writer.close();
     }
 
     // MODIFIES: this
     // EFFECTS: writes string to file
     private void saveToFile(String json) {
-        // stub
+        writer.print(json);
     }
 }
 

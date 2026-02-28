@@ -497,7 +497,14 @@ public class UltimateTrainingTrackerApp {
 
     // EFFECTS: saves the training log and goal log to file
     private void saveData() {
-        // stub
+        try {
+            jsonWriter.open();
+            jsonWriter.write(trainingLog, goalLog);
+            jsonWriter.close();
+            System.out.println("Saved training log and goal log to " + JSON_STORE);
+        } catch (FileNotFoundException e) {
+            System.out.println("Unable to write to file: " + JSON_STORE);
+        }
     }
 
     // MODIFIES: this

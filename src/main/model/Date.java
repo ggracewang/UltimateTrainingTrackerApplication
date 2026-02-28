@@ -2,7 +2,6 @@ package model;
 
 import org.json.JSONObject;
 
-
 public class Date {
     private Integer day;
     private Integer month;
@@ -23,15 +22,14 @@ public class Date {
         this.year = year;
     }
 
-
-    // EFFECTS: returns the day 
+    // EFFECTS: returns the day
     public int getDay() {
-        return day; 
+        return day;
     }
 
-    // EFFECTS: returns the month 
+    // EFFECTS: returns the month
     public int getMonth() {
-        return month; //stub
+        return month; // stub
     }
 
     // EFFECTS: returns the year
@@ -43,15 +41,15 @@ public class Date {
     // EFFECTS: returns the date in string format
     public String getFullDateInStringFormat() {
         String stringYear = (getMonth() + "/" + getDay() + "/" + getYear());
-        return stringYear; 
+        return stringYear;
     }
 
     // EFFECTS: returns this date as JSON object
     public JSONObject toJson() {
-    JSONObject json = new JSONObject();
-    json.put("day", day);
-    json.put("month", month);
-    json.put("year", year);
-    return json;
+        JSONObject json = new JSONObject();
+        json.put("day", day);
+        json.put("month", month);
+        json.put("year", year);
+        return json;
     }
 }

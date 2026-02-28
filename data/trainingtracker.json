@@ -1,0 +1,34 @@
+{
+    "goalLog": {"goals": [
+        {
+            "date": {
+                "month": 2,
+                "year": 3030,
+                "day": 1
+            },
+            "description": "skibiditoiletrizz",
+            "completionStatus": false,
+            "title": "sigma"
+        },
+        {
+            "date": {
+                "month": 67,
+                "year": 6767,
+                "day": 67
+            },
+            "description": "lirililarila",
+            "completionStatus": false,
+            "title": "tungtungtungsahur"
+        }
+    ]},
+    "trainingLog": {"sessions": [{
+        "date": {
+            "month": 1,
+            "year": 2025,
+            "day": 1
+        },
+        "duration": 67,
+        "skills": "forehand",
+        "notes": "skibidi"
+    }]}
+}

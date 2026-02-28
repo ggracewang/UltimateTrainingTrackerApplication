@@ -126,5 +126,5 @@ public class JsonReader {
         }
 
         gl.addGoal(goal);
-        }
+    }
 }
