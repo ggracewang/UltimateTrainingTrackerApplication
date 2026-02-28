@@ -98,9 +98,9 @@ public class TestTrainingSession {
     
         JSONObject json = testSession1.toJson();
     
-        assertEquals(67, json.getInt("duration"));
+        assertEquals(60, json.getInt("duration"));
         assertEquals("Forehand", json.getString("skills"));
-        assertEquals("skibidi", json.getString("notes"));
+        assertEquals("Good practice", json.getString("notes"));
     
         JSONObject dateJson = json.getJSONObject("date");
         assertEquals(31, dateJson.getInt("day"));

@@ -63,7 +63,12 @@ public class Goal {
 
     // EFFECTS: returns this goal as a JSON object
     public JSONObject toJson() {
-        return null;  // stub
+        JSONObject json = new JSONObject();
+        json.put("title", title);
+        json.put("description", description);
+        json.put("date", date.toJson());
+        json.put("completionStatus", completionStatus);
+        return json;
     }
 
 }

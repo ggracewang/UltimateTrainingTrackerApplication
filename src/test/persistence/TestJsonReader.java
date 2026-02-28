@@ -43,7 +43,7 @@ public class TestJsonReader {
             
             List<TrainingSession> sessions = tl.getTrainingLog();
             assertEquals(2, sessions.size());
-            assertEquals(60, sessions.get(0).getDuration());
+            assertEquals(67, sessions.get(0).getDuration());
             assertEquals("Forehand, Backhand", sessions.get(0).getSkills());
             
             List<Goal> goals = gl.getAllGoals();

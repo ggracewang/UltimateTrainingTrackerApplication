@@ -48,12 +48,21 @@ public class TrainingLog {
 
     // EFFECTS: returns this training log as a JSON object
     public JSONObject toJson() {
-        return null;  // stub
+        JSONObject json = new JSONObject();
+        json.put("sessions", sessionsToJson());
+        return json;
     }
 
     // EFFECTS: returns training sessions in this log as a JSON array
     private JSONArray sessionsToJson() {
-        return null;  // stub
+        JSONArray jsonArray = new JSONArray();
+    
+        for (TrainingSession session : trainingLog) {
+            jsonArray.put(session.toJson());
+        }
+        
+        return jsonArray;
+
     }
 
 }

@@ -54,11 +54,19 @@ public class GoalLog {
 
     // EFFECTS: returns this goal log as a JSON object
     public JSONObject toJson() {
-        return null;  // stub
+        JSONObject json = new JSONObject();
+        json.put("goals", goalsToJson());
+        return json;
     }
 
     // EFFECTS: returns goals in this log as a JSON array
     private JSONArray goalsToJson() {
-        return null;  // stub
+        JSONArray jsonArray = new JSONArray();
+    
+        for (Goal goal : goalLog) {
+            jsonArray.put(goal.toJson());
+        }
+        
+        return jsonArray;
     }
 }

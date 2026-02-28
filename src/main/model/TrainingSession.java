@@ -66,7 +66,13 @@ public class TrainingSession {
 
     // EFFECTS: returns this training session as a JSON object
     public JSONObject toJson() {
-        return null;  // stub
+        JSONObject json = new JSONObject();
+        json.put("date", date.toJson());
+        json.put("duration", duration);
+        json.put("skills", skills);
+        json.put("notes", notes);
+        return json;
+
     }
 
 }

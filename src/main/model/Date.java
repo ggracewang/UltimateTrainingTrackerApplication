@@ -48,6 +48,10 @@ public class Date {
 
     // EFFECTS: returns this date as JSON object
     public JSONObject toJson() {
-        return null; //stub
+    JSONObject json = new JSONObject();
+    json.put("day", day);
+    json.put("month", month);
+    json.put("year", year);
+    return json;
     }
 }

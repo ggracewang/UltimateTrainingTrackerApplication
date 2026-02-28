@@ -492,7 +492,13 @@ public class UltimateTrainingTrackerApp {
     // MODIFIES: this
     // EFFECTS: loads training log and goal log from file
     private void loadData() {
-        // stub
+        try {
+            trainingLog = jsonReader.readTrainingLog();
+            goalLog = jsonReader.readGoalLog();
+            System.out.println("Loaded training log and goal log from " + JSON_STORE);
+        } catch (IOException e) {
+            System.out.println("Unable to read from file: " + JSON_STORE);
+        }
     }
 
 }

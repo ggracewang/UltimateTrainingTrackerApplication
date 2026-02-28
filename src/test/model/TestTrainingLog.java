@@ -25,6 +25,9 @@ public class TestTrainingLog {
 
     @BeforeEach
     void runBefore() {
+        date1 = new Date(31, 12, 2026);
+        date2 = new Date(1, 1, 2027);
+        date3 = new Date(11, 23, 2028);
 
         session1 = new TrainingSession();
         session1.setDate(date1);
@@ -44,10 +47,7 @@ public class TestTrainingLog {
         session3.setNotes("Cardio");
         session3.setSkills("endurance");
 
-        date1 = new Date(31, 12, 2026);
-        date2 = new Date(1, 1, 2027);
-        date3 = new Date(11, 23, 2028);
-
+        
         testTrainingLog = new TrainingLog();
 
     }
