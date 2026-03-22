@@ -44,7 +44,6 @@ public class TestJsonWriter {
         try {
             TrainingLog tl = new TrainingLog();
             GoalLog gl = new GoalLog();
-
             TrainingSession session = new TrainingSession();
             session.setDate(new Date(15, 1, 2025));
             session.setDuration(60);
@@ -52,8 +51,7 @@ public class TestJsonWriter {
             session.setNotes("Good");
             tl.addSession(session);
 
-            Goal goal = new Goal("Test Goal", "Test Description", new Date(31, 12, 2025));
-            gl.addGoal(goal);
+            gl.addGoal(new Goal("Test Goal", "Test Description", new Date(31, 12, 2025)));
 
             JsonWriter writer = new JsonWriter("./data/testWriterGeneralLogs.json");
             writer.open();
@@ -67,8 +65,8 @@ public class TestJsonWriter {
             assertEquals(1, tl.getTrainingLog().size());
             assertEquals(1, gl.getAllGoals().size());
             assertEquals("Test Goal", gl.getAllGoals().get(0).getTitle());
-            
-        } catch (IOException e) {
+
+        } catch (IOException e) { 
             fail("Exception should not have been thrown");
         }
     }

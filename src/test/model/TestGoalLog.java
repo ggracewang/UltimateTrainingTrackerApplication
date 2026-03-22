@@ -149,6 +149,6 @@ public class TestGoalLog {
         JSONObject firstGoal = goals.getJSONObject(0);
         assertTrue(firstGoal.getBoolean("completionStatus"));
 
-}
+    }
     
 }
