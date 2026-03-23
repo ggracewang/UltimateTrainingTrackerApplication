@@ -19,6 +19,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
+import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
+
 // Referenced from AlarmSystem demo 
 
 /**
@@ -26,6 +28,7 @@ import javax.swing.WindowConstants;
  * Opened from the main window when the user clicks "View Stats".
  * Uses DISPOSE_ON_CLOSE so closing this window does not exit the application.
  */
+@ExcludeFromJacocoGeneratedReport
 class StatsWindow extends JFrame {
 
     private static final int WIDTH  = 500;

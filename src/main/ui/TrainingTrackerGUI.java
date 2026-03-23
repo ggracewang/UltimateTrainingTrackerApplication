@@ -35,8 +35,10 @@ import javax.swing.WindowConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
-// Referenced from AlarmSystem demo 
+import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
 
+// Referenced from AlarmSystem demo 
+@ExcludeFromJacocoGeneratedReport
 public class TrainingTrackerGUI extends JFrame {
     private static final int WIDTH  = 820;
     private static final int HEIGHT = 520;

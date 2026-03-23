@@ -14,11 +14,15 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
+import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
+
 // Referenced from AlarmSystem — AlarmUI.java 
 
 /**
  * Represents a custom-painted bar chart showing training session durations.
  */
+@ExcludeFromJacocoGeneratedReport
+
 public class BarChartPanel extends JPanel {
 
     private List<TrainingSession> sessions;

@@ -5,6 +5,8 @@ import model.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
 import persistence.JsonReader;
 import persistence.JsonWriter;
 import java.io.FileNotFoundException;
@@ -14,7 +16,7 @@ import java.io.IOException;
 // https://github.students.cs.ubc.ca/CPSC210/JsonSerializationDemo
 
 // Referenced from Lab 4: Flashcard Reviewer Application
-
+@ExcludeFromJacocoGeneratedReport
 public class UltimateTrainingTrackerApp {
     private GoalLog goalLog;
     private TrainingLog trainingLog;
