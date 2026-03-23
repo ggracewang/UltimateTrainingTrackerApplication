@@ -1,7 +1,9 @@
 package ui;
 
+import javax.swing.SwingUtilities;
+
 public class Main {
     public static void main(String[] args) throws Exception {
-        new UltimateTrainingTrackerApp();
+        SwingUtilities.invokeLater(() -> new TrainingTrackerGUI());
     }
 }

@@ -23,12 +23,12 @@
     ]},
     "trainingLog": {"sessions": [{
         "date": {
-            "month": 1,
-            "year": 2025,
+            "month": 2,
+            "year": 4,
             "day": 1
         },
-        "duration": 67,
-        "skills": "forehand",
-        "notes": "skibidi"
+        "duration": 31,
+        "skills": "dfsads",
+        "notes": "f"
     }]}
 }
