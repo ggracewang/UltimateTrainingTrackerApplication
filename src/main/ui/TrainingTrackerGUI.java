@@ -82,6 +82,7 @@ public class TrainingTrackerGUI extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                printLog(EventLog.getInstance());
                 new SaveAction().actionPerformed(null);
             }
         });
@@ -89,6 +90,13 @@ public class TrainingTrackerGUI extends JFrame {
         centreOnScreen();
         setVisible(true);
         promptLoadOnStart();
+    }
+
+    private void printLog(EventLog el) {
+        for (Event e: el) {
+            System.out.println(e.toString());
+            System.out.println();
+        }
     }
  
     // MODIFIES: this

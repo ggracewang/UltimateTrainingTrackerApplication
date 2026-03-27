@@ -19,14 +19,19 @@ public class TrainingLog {
     // EFFECTS: adds the given training session to the trainingLog list
     public void addSession(TrainingSession session) {
         trainingLog.add(session);
+        EventLog.getInstance().logEvent(new Event(session.getDuration() + " min session on "
+                + session.getDate().getFullDateInStringFormat() + " added to Training Log."));
     }
 
     // REQUIRES: training session != null
     // MODIFIES: this
-    // EFFECTS: removes the given training session from the trainingLog list if there is one
+    // EFFECTS: removes the given training session from the trainingLog list if
+    // there is one
     public void removeSession(TrainingSession session) {
         for (int i = 0; i < trainingLog.size(); i++) {
             if (trainingLog.get(i) == session) {
+                EventLog.getInstance().logEvent(new Event(session.getDuration() + " min session on "
+                        + session.getDate().getFullDateInStringFormat() + " removed from Training Log."));
                 trainingLog.remove(i);
             }
         }
@@ -34,13 +39,13 @@ public class TrainingLog {
 
     // EFFECTS: returns list of of training sessions logged
     public List<TrainingSession> getTrainingLog() {
-        return trainingLog; 
+        return trainingLog;
     }
 
     // EFFECTS: returns the total duration practiced of all sessions in training log
     public int getTotalDurationPracticed() {
         int totalDuration = 0;
-        for (TrainingSession s: trainingLog) {
+        for (TrainingSession s : trainingLog) {
             totalDuration += s.getDuration();
         }
         return totalDuration;
@@ -56,11 +61,11 @@ public class TrainingLog {
     // EFFECTS: returns training sessions in this log as a JSON array
     private JSONArray sessionsToJson() {
         JSONArray jsonArray = new JSONArray();
-    
+
         for (TrainingSession session : trainingLog) {
             jsonArray.put(session.toJson());
         }
-        
+
         return jsonArray;
 
     }

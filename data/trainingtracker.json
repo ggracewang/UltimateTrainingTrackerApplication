@@ -23,12 +23,12 @@
     ]},
     "trainingLog": {"sessions": [{
         "date": {
-            "month": 2,
-            "year": 4,
-            "day": 1
+            "month": 4,
+            "year": 2024,
+            "day": 2
         },
-        "duration": 31,
-        "skills": "dfsads",
-        "notes": "f"
+        "duration": 20,
+        "skills": "",
+        "notes": ""
     }]}
 }

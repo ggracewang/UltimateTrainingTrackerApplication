@@ -53,3 +53,15 @@ As an active ultimate player myself who started not long ago, I've struggled to 
   clicking "Yes" when the save prompt appears on close.
 - You can reload the state of the application by clicking "Load", or by 
   clicking "Yes" when the load prompt appears on startup.
+
+
+# Phase 4: Task 2
+
+Fri Mar 27 14:27:01 PDT 2026
+80 min session on 3/2/2026 added to Training Log.
+
+Fri Mar 27 14:27:19 PDT 2026
+20 min session on 4/2/2024 added to Training Log.
+
+Fri Mar 27 14:27:25 PDT 2026
+80 min session on 3/2/2026 removed from Training Log.
