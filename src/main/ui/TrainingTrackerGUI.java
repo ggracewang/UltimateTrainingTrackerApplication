@@ -46,7 +46,6 @@ public class TrainingTrackerGUI extends JFrame {
 
     // Colour palette:
     private static final Color COLOUR_HEADER  = new Color(44, 62, 80);
-    private static final Color COLOUR_ACCENT  = new Color(41, 128, 185);
     private static final Color COLOUR_PANEL   = new Color(248, 249, 252);
     private static final Color COLOUR_BORDER  = new Color(218, 220, 228);
     private static final Color COLOUR_ROW_ALT = new Color(248, 249, 252);
@@ -103,7 +102,7 @@ public class TrainingTrackerGUI extends JFrame {
         title.setFont(new Font("SansSerif", Font.BOLD, 20));
         title.setForeground(Color.WHITE);
  
-        JLabel subtitle = new JLabel("Ultimate Frisbee Training Tracker");
+        JLabel subtitle = new JLabel("Ultimate Training Tracker");
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
         subtitle.setForeground(new Color(143, 168, 188));
  
@@ -417,8 +416,7 @@ public class TrainingTrackerGUI extends JFrame {
                     "Delete session #" + (selectedRow + 1) + "? This cannot be undone.",
                     "Confirm Delete", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                trainingLog.removeSession(
-                        trainingLog.getTrainingLog().get(selectedRow));
+                trainingLog.removeSession(trainingLog.getTrainingLog().get(selectedRow));
                 refreshTable();
             }
         }

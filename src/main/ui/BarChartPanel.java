@@ -120,7 +120,7 @@ public class BarChartPanel extends JPanel {
     // MODIFIES: g2
     // EFFECTS: draws one filled bar per session, scaled so the tallest bar
     //          fills chartH pixels; draws a darker border on each bar;
-    //          calls drawBarValueLabel and drawBarIndelabel for each bar.
+    //          calls drawBarValueLabel and drawBarIndexlabel for each bar.
     //          Bar height formula: (double)duration / maxDuration * chartH 
     private void drawBars(Graphics2D g2, int chartW, int chartH, int maxDuration) {
         int n    = sessions.size();

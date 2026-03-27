@@ -44,8 +44,6 @@ class StatsWindow extends JFrame {
     public StatsWindow(List<TrainingSession> sessions) {
         super("Training Stats");
         setSize(WIDTH, HEIGHT);
-        // DISPOSE_ON_CLOSE closes only this window.
-        // EXIT_ON_CLOSE would terminate the entire application.
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setResizable(false);
         setLayout(new BorderLayout());

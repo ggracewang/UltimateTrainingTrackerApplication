@@ -46,12 +46,9 @@ As an active ultimate player myself who started not long ago, I've struggled to 
 
 - You can view the panel displaying training sessions by looking at the 
   table labelled "Sessions" in the main window.
-- You can generate the first required action (add a session) by clicking 
-  the "Add Session" button at the bottom of the main window.
-- You can generate the second required action (remove a session) by clicking 
-  a row to select it, then clicking "Remove Selected".
-- You can locate the visual component (bar chart) by clicking "View Stats", 
-  which opens the Training Stats window.
+- You can generate the first required action (add a session) by clicking the "Add Session" button at the bottom of the main window.
+- You can generate the second required action (remove a session) by clicking a row to select it, then clicking "Remove Selected".
+- You can locate the visual component (bar chart) by clicking "View Stats", which opens the Training Stats window.
 - You can save the state of the application by clicking "Save", or by 
   clicking "Yes" when the save prompt appears on close.
 - You can reload the state of the application by clicking "Load", or by 
