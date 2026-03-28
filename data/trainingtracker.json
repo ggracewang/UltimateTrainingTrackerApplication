@@ -1,5 +1,13 @@
 {
-    "goalLog": {"goals": [
-
-    ]}
+    "goalLog": {"goals": []},
+    "trainingLog": {"sessions": [{
+        "date": {
+            "month": 4,
+            "year": 2026,
+            "day": 3
+        },
+        "duration": 25,
+        "skills": "",
+        "notes": ""
+    }]}
 }

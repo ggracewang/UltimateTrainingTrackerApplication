@@ -58,13 +58,13 @@ As an active ultimate player myself who started not long ago, I've struggled to 
 # Phase 4: Task 2
 
 Fri Mar 27 14:27:01 PDT 2026
-80 min session on 3/2/2026 added to Training Log.
+80 min training session on 3/2/2026 added to Training Log.
 
 Fri Mar 27 14:27:19 PDT 2026
-20 min session on 4/2/2024 added to Training Log.
+20 min training session on 4/2/2024 added to Training Log.
 
 Fri Mar 27 14:27:25 PDT 2026
-80 min session on 3/2/2026 removed from Training Log.
+80 min training session on 3/2/2026 removed from Training Log.
 
 # Phase 4: Task 3
 

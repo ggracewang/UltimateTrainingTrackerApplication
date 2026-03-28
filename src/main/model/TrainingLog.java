@@ -19,7 +19,7 @@ public class TrainingLog {
     // EFFECTS: adds the given training session to the trainingLog list
     public void addSession(TrainingSession session) {
         trainingLog.add(session);
-        EventLog.getInstance().logEvent(new Event(session.getDuration() + " min session on "
+        EventLog.getInstance().logEvent(new Event(session.getDuration() + " min training session on "
                 + session.getDate().getFullDateInStringFormat() + " added to Training Log."));
     }
 
@@ -30,7 +30,7 @@ public class TrainingLog {
     public void removeSession(TrainingSession session) {
         for (int i = 0; i < trainingLog.size(); i++) {
             if (trainingLog.get(i) == session) {
-                EventLog.getInstance().logEvent(new Event(session.getDuration() + " min session on "
+                EventLog.getInstance().logEvent(new Event(session.getDuration() + " min training session on "
                         + session.getDate().getFullDateInStringFormat() + " removed from Training Log."));
                 trainingLog.remove(i);
             }
