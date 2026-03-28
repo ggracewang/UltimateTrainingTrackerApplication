@@ -65,3 +65,9 @@ Fri Mar 27 14:27:19 PDT 2026
 
 Fri Mar 27 14:27:25 PDT 2026
 80 min session on 3/2/2026 removed from Training Log.
+
+# Phase 4: Task 3
+
+Right now, my TrainingLog and GoalLog classes are almost identical in how they work. They both store a list of items, allow you to add or remove them, and convert that data into a JSON format. I would refactor these to use a single parent class (like an abstract Log class). This would remove a lot of repeated code and make the project much easier to maintain, as any changes to how logs are handled would only need to be made in one place.
+
+I would also use Java's built in Date library instead. Currently, I have a custom Date class that manually handles the day, month, and year values, which can be prone to errors. If I were to continue this project, I would replace it with Java's standard LocalDate library. This would make the application more reliable because the standard library already handles complex logic like leap years and date comparisons. It would also make my code cleaner by allowing me to delete a custom class that essentially recreates a tool that already exists in Java.

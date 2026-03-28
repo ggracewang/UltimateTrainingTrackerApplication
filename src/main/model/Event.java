@@ -6,7 +6,7 @@ import java.util.Date;
 // REFERENCED FROM ALARM SYSTEM DEMO (COPIED)
 
 /**
- * Represents an alarm system event.
+ * Represents an training tracker event with a timestamp and description.
  */
 public class Event {
     private static final int HASH_CONSTANT = 13;
