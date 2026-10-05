@@ -1,20 +1,12 @@
 {
     "goalLog": {"goals": [{
-        "date": {
-            "month": 12,
-            "year": 2025,
-            "day": 31
-        },
+        "targetDate": "2025-12-31",
         "description": "Test Description",
-        "completionStatus": false,
+        "completed": true,
         "title": "Test Goal"
     }]},
     "trainingLog": {"sessions": [{
-        "date": {
-            "month": 1,
-            "year": 2025,
-            "day": 15
-        },
+        "date": "2025-01-15",
         "duration": 60,
         "skills": "Forehand",
         "notes": "Good"

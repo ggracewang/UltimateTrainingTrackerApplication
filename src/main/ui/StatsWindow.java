@@ -1,17 +1,12 @@
 package ui;
 
-import model.TrainingSession;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -20,102 +15,99 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
+import model.TrainingLog;
 
-// Referenced from AlarmSystem demo 
+// Referenced from AlarmSystem demo
 
 /**
- * Represents the stats window showing a bar chart of training session durations.
- * Opened from the main window when the user clicks "View Stats".
+ * Represents the stats window: a bar chart of how long each training session
+ * lasted, with a line of totals above it.
+ * Opened from the Sessions tab when the user clicks "View Stats".
  * Uses DISPOSE_ON_CLOSE so closing this window does not exit the application.
  */
 @ExcludeFromJacocoGeneratedReport
 class StatsWindow extends JFrame {
 
-    private static final int WIDTH  = 500;
-    private static final int HEIGHT = 400;
+    private static final int WIDTH = 560;
+    private static final int HEIGHT = 430;
 
-    private static final Color COLOUR_HEADER = new Color(44,  62,  80);
-    private static final Color COLOUR_PANEL  = new Color(248, 249, 252);
-    private static final Color COLOUR_BORDER = new Color(218, 220, 228);
-
-    // MODIFIES: this
-    // EFFECTS: builds and displays the stats window containing a header,
-    //          bar chart of the given sessions, and a close button
-    public StatsWindow(List<TrainingSession> sessions) {
+    // REQUIRES: trainingLog != null
+    // EFFECTS: builds and shows the stats window for the given training log
+    public StatsWindow(TrainingLog trainingLog) {
         super("Training Stats");
         setSize(WIDTH, HEIGHT);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setResizable(false);
         setLayout(new BorderLayout());
-        addHeader();
-        addChartPanel(sessions);
-        addFooter();
+        add(createNorth(trainingLog), BorderLayout.NORTH);
+        add(createChartPanel(trainingLog), BorderLayout.CENTER);
+        add(createFooter(), BorderLayout.SOUTH);
         centreOnScreen();
         setVisible(true);
     }
 
-    // MODIFIES: this
-    // EFFECTS: creates and adds the dark header panel to NORTH region
-    private void addHeader() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(COLOUR_HEADER);
-        panel.setBorder(BorderFactory.createEmptyBorder(14, 22, 14, 22));
-
-        JLabel title = new JLabel("Duration per Session");
-        title.setFont(new Font("SansSerif", Font.BOLD, 16));
-        title.setForeground(Color.WHITE);
-
-        JLabel subtitle = new JLabel("Minutes practiced per training session");
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        subtitle.setForeground(new Color(143, 168, 188));
-
-        JPanel textStack = new JPanel();
-        textStack.setLayout(new BoxLayout(textStack, BoxLayout.Y_AXIS));
-        textStack.setOpaque(false);
-        textStack.add(title);
-        textStack.add(Box.createVerticalStrut(3));
-        textStack.add(subtitle);
-
-        panel.add(textStack, BorderLayout.WEST);
-        add(panel, BorderLayout.NORTH);
+    // REQUIRES: trainingLog != null
+    // EFFECTS: returns the dark header bar with the totals line stacked below it
+    private JPanel createNorth(TrainingLog trainingLog) {
+        JPanel north = new JPanel();
+        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
+        north.add(UiTheme.createHeader("Duration per Session",
+                "Minutes practiced per training session"));
+        north.add(createTotalsBar(trainingLog));
+        return north;
     }
 
-    // MODIFIES: this
-    // EFFECTS: creates a BarChartPanel loaded with sessions and adds it
-    //          to the CENTER region
-    private void addChartPanel(List<TrainingSession> sessions) {
+    // REQUIRES: trainingLog != null
+    // EFFECTS: returns a strip showing the session count, total hours, average
+    //          session length, and longest session
+    private JPanel createTotalsBar(TrainingLog trainingLog) {
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setBackground(UiTheme.PANEL_BG);
+        bar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.BORDER),
+                BorderFactory.createEmptyBorder(10, 22, 10, 22)));
+
+        JLabel totals = new JLabel(String.format(
+                "%d sessions      %.1f hours total      %.0f min average      %d min longest",
+                trainingLog.size(), trainingLog.getTotalHoursPracticed(),
+                trainingLog.getAverageSessionDuration(), trainingLog.getLongestSessionDuration()));
+        totals.setFont(UiTheme.SMALL_FONT);
+        totals.setForeground(UiTheme.LABEL_FG);
+
+        bar.add(totals, BorderLayout.WEST);
+        return bar;
+    }
+
+    // REQUIRES: trainingLog != null
+    // EFFECTS: returns a white panel holding the bar chart of the given sessions
+    private JPanel createChartPanel(TrainingLog trainingLog) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(18, 22, 10, 22));
         BarChartPanel chart = new BarChartPanel();
-        chart.setData(sessions);
+        chart.setData(trainingLog.getAll());
         panel.add(chart, BorderLayout.CENTER);
-        add(panel, BorderLayout.CENTER);
+        return panel;
     }
 
-    // MODIFIES: this
-    // EFFECTS: creates and adds the footer panel with a close button SOUTH
-    private void addFooter() {
-        JPanel panel = new JPanel();
-        panel.setBackground(COLOUR_PANEL);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, COLOUR_BORDER),
-                BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+    // EFFECTS: returns the footer panel holding the close button
+    private JPanel createFooter() {
+        JPanel panel = UiTheme.createButtonBar();
         panel.add(new JButton(new CloseAction()));
-        add(panel, BorderLayout.SOUTH);
+        return panel;
     }
 
     // MODIFIES: this
     // EFFECTS: positions this window at the centre of the screen
     private void centreOnScreen() {
-        int width  = Toolkit.getDefaultToolkit().getScreenSize().width;
-        int height = Toolkit.getDefaultToolkit().getScreenSize().height;
-        setLocation((width - getWidth()) / 2, (height - getHeight()) / 2);
+        int screenWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
+        int screenHeight = Toolkit.getDefaultToolkit().getScreenSize().height;
+        setLocation((screenWidth - getWidth()) / 2, (screenHeight - getHeight()) / 2);
     }
 
     /**
-     * Represents the action to be taken when the user wants to close
-     * the stats window and return to the main window.
+     * Represents the action taken when the user wants to close the stats window
+     * and return to the main window.
      */
     private class CloseAction extends AbstractAction {
 
@@ -124,8 +116,7 @@ class StatsWindow extends JFrame {
         }
 
         // MODIFIES: this
-        // EFFECTS: disposes of this window; the main TrainingTrackerGUI
-        //          window remains open and unaffected
+        // EFFECTS: disposes of this window; the main window stays open
         @Override
         public void actionPerformed(ActionEvent evt) {
             dispose();

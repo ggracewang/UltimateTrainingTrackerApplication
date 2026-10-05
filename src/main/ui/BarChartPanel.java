@@ -44,7 +44,7 @@ public class BarChartPanel extends JPanel {
     }
 
     // MODIFIES: this
-    // EFFECTS: sets the session data to visualise-- makes acopy so
+    // EFFECTS: sets the session data to visualise-- makes a copy so
     //          external changes to the list do not affect this panel
     public void setData(List<TrainingSession> sessions) {
         this.sessions = new ArrayList<>(sessions);
@@ -120,7 +120,7 @@ public class BarChartPanel extends JPanel {
     // MODIFIES: g2
     // EFFECTS: draws one filled bar per session, scaled so the tallest bar
     //          fills chartH pixels; draws a darker border on each bar;
-    //          calls drawBarValueLabel and drawBarIndexlabel for each bar.
+    //          calls drawBarValueLabel and drawBarIndexLabel for each bar.
     //          Bar height formula: (double)duration / maxDuration * chartH 
     private void drawBars(Graphics2D g2, int chartW, int chartH, int maxDuration) {
         int n    = sessions.size();
@@ -137,7 +137,7 @@ public class BarChartPanel extends JPanel {
             g2.setColor(COLOUR_BAR_DARK);
             g2.drawRect(x, y, barW, barH);
             drawBarValueLabel(g2, x, y, barW, duration);
-            drawBarIndelabel(g2, x, barW, chartH, i);
+            drawBarIndexLabel(g2, x, barW, chartH, i);
         }
     }
 
@@ -158,7 +158,7 @@ public class BarChartPanel extends JPanel {
     // MODIFIES: g2
     // EFFECTS: draws the 1-based session index centred below the X axis
     //          under the bar if barW >= 8; does nothing otherwise
-    private void drawBarIndelabel(Graphics2D g2, int x, int barW, int chartH, int index) {
+    private void drawBarIndexLabel(Graphics2D g2, int x, int barW, int chartH, int index) {
         if (barW >= 8) {
             g2.setColor(COLOUR_AXIS);
             g2.setFont(new Font("SansSerif", Font.PLAIN, 9));

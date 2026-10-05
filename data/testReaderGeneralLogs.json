@@ -2,21 +2,13 @@
   "trainingLog": {
     "sessions": [
       {
-        "date": {
-          "day": 15,
-          "month": 1,
-          "year": 2025
-        },
+        "date": "2025-01-15",
         "duration": 67,
         "skills": "Forehand, Backhand",
         "notes": ""
       },
       {
-        "date": {
-          "day": 16,
-          "month": 1,
-          "year": 2025
-        },
+        "date": "2025-01-16",
         "duration": 41,
         "skills": "Defense",
         "notes": "Improved"
@@ -28,22 +20,14 @@
       {
         "title": "Master huck",
         "description": "Throw 50 meters",
-        "date": {
-          "day": 31,
-          "month": 12,
-          "year": 2025
-        },
-        "completionStatus": false
+        "targetDate": "2025-12-31",
+        "completed": false
       },
       {
         "title": "Improve vertical",
         "description": "Jump higher",
-        "date": {
-          "day": 30,
-          "month": 6,
-          "year": 2025
-        },
-        "completionStatus": true
+        "targetDate": "2025-06-30",
+        "completed": true
       }
     ]
   }

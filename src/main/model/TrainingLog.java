@@ -1,73 +1,67 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.List;
+// Represents the player's training log: every training session they have
+// recorded, in the order they recorded them.
+//
+// Adding, removing, counting, and saving to JSON all come from Log. This class
+// only supplies the training-specific wording for event messages and the sums
+// and averages the stats window reports.
+public class TrainingLog extends Log<TrainingSession> {
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+    private static final int MINUTES_PER_HOUR = 60;
 
-public class TrainingLog {
-    private List<TrainingSession> trainingLog;
-
-    // EFFECTS: constructs new training log with no training sessions
-    public TrainingLog() {
-        trainingLog = new ArrayList<>();
-    }
-
-    // REQUIRES: training session != null
-    // MODIFIES: this
-    // EFFECTS: adds the given training session to the trainingLog list
-    public void addSession(TrainingSession session) {
-        trainingLog.add(session);
-        EventLog.getInstance().logEvent(new Event(session.getDuration() + " min training session on "
-                + session.getDate().getFullDateInStringFormat() + " added to Training Log."));
-    }
-
-    // REQUIRES: training session != null
-    // MODIFIES: this
-    // EFFECTS: removes the given training session from the trainingLog list if
-    // there is one
-    public void removeSession(TrainingSession session) {
-        for (int i = 0; i < trainingLog.size(); i++) {
-            if (trainingLog.get(i) == session) {
-                EventLog.getInstance().logEvent(new Event(session.getDuration() + " min training session on "
-                        + session.getDate().getFullDateInStringFormat() + " removed from Training Log."));
-                trainingLog.remove(i);
-            }
-        }
-    }
-
-    // EFFECTS: returns list of of training sessions logged
-    public List<TrainingSession> getTrainingLog() {
-        return trainingLog;
-    }
-
-    // EFFECTS: returns the total duration practiced of all sessions in training log
+    // EFFECTS: returns the total number of minutes practised across all sessions
     public int getTotalDurationPracticed() {
         int totalDuration = 0;
-        for (TrainingSession s : trainingLog) {
+        for (TrainingSession s : items) {
             totalDuration += s.getDuration();
         }
         return totalDuration;
     }
 
-    // EFFECTS: returns this training log as a JSON object
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
-        json.put("sessions", sessionsToJson());
-        return json;
+    // EFFECTS: returns the total number of hours practised across all sessions
+    public double getTotalHoursPracticed() {
+        return (double) getTotalDurationPracticed() / MINUTES_PER_HOUR;
     }
 
-    // EFFECTS: returns training sessions in this log as a JSON array
-    private JSONArray sessionsToJson() {
-        JSONArray jsonArray = new JSONArray();
-
-        for (TrainingSession session : trainingLog) {
-            jsonArray.put(session.toJson());
+    // EFFECTS: returns the average length in minutes of a session in this log,
+    //          or 0 if no sessions have been logged yet
+    public double getAverageSessionDuration() {
+        if (isEmpty()) {
+            return 0;
         }
-
-        return jsonArray;
-
+        return (double) getTotalDurationPracticed() / size();
     }
 
+    // EFFECTS: returns the length in minutes of the longest session in this log,
+    //          or 0 if no sessions have been logged yet
+    public int getLongestSessionDuration() {
+        int longest = 0;
+        for (TrainingSession s : items) {
+            if (s.getDuration() > longest) {
+                longest = s.getDuration();
+            }
+        }
+        return longest;
+    }
+
+    // EFFECTS: returns the name training sessions are stored under in JSON
+    @Override
+    protected String getJsonKey() {
+        return "sessions";
+    }
+
+    // EFFECTS: returns this log's name as it appears in event messages
+    @Override
+    protected String getLogName() {
+        return "Training Log";
+    }
+
+    // REQUIRES: session != null
+    // EFFECTS: returns a description of the given session for event messages,
+    //          e.g. "80 min training session on 3/2/2026"
+    @Override
+    protected String describe(TrainingSession session) {
+        return session.getDuration() + " min training session on " + session.getDateAsString();
+    }
 }

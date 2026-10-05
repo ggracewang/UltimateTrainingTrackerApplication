@@ -1,154 +1,235 @@
 package model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.LocalDate;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 
 public class TestGoalLog {
     private GoalLog testGoalLog;
     private Goal goal1;
     private Goal goal2;
     private Goal goal3;
-    private Date date1;
-    private Date date2;
-    private Date date3;
-    
 
     @BeforeEach
     void runBefore() {
         testGoalLog = new GoalLog();
 
-        date1 = new Date(31, 12, 2026);
-        date2 = new Date(1, 1, 2027);
-        date3 = new Date(11, 23, 2028);
-
-        goal1 = new Goal("Master huck", "Throw 50 meters consistently.", date1);
-        goal2 = new Goal("Improve vertical", "Increase jump by 5cm.", date2);
-        goal3 = new Goal("", "", date3); //boundary case, empty
+        goal1 = new Goal("Master huck", "Throw 50 meters consistently.", LocalDate.of(2026, 12, 31));
+        goal2 = new Goal("Improve vertical", "Increase jump by 5cm.", LocalDate.of(2027, 1, 1));
+        goal3 = new Goal("", "", LocalDate.of(2028, 11, 23)); // boundary case: empty title
     }
 
     @Test
     void testConstructor() {
-        assertTrue(testGoalLog.getAllGoals().isEmpty());
+        assertTrue(testGoalLog.isEmpty());
+        assertEquals(0, testGoalLog.size());
+        assertTrue(testGoalLog.getAll().isEmpty());
         assertTrue(testGoalLog.getCompletedGoals().isEmpty());
     }
 
     @Test
     void testAddGoals() {
-        //add 1 goal to goal log
-        testGoalLog.addGoal(goal1);
+        testGoalLog.add(goal1);
+        assertFalse(testGoalLog.isEmpty());
+        assertEquals(1, testGoalLog.size());
+        assertEquals(goal1, testGoalLog.getAll().get(0));
 
-        assertFalse(testGoalLog.getAllGoals().isEmpty());
-        assertEquals(1, testGoalLog.getAllGoals().size());
-        assertEquals(goal1, testGoalLog.getAllGoals().get(0));
+        testGoalLog.add(goal2);
+        testGoalLog.add(goal3);
+        assertEquals(3, testGoalLog.size());
+        assertEquals(goal1, testGoalLog.getAll().get(0));
+        assertEquals(goal2, testGoalLog.getAll().get(1));
+        assertEquals(goal3, testGoalLog.getAll().get(2));
+    }
 
-        //add more goals to goal log
-        testGoalLog.addGoal(goal2);
-        testGoalLog.addGoal(goal3);
+    @Test
+    void testAddGoalAlreadyInLog() {
+        testGoalLog.add(goal1);
+        testGoalLog.add(goal2);
 
-        assertEquals(3, testGoalLog.getAllGoals().size());
-        assertEquals(goal1, testGoalLog.getAllGoals().get(0));
-        assertEquals(goal2, testGoalLog.getAllGoals().get(1));
-        assertEquals(goal3, testGoalLog.getAllGoals().get(2));
+        testGoalLog.add(goal1); // already in the log, so it is ignored
 
-        testGoalLog.addGoal(goal1); //add goal that's already in goal log
-        assertEquals(3, testGoalLog.getAllGoals().size());
-        assertEquals(goal1, testGoalLog.getAllGoals().get(0));
-        assertEquals(goal2, testGoalLog.getAllGoals().get(1));
-        assertEquals(goal3, testGoalLog.getAllGoals().get(2));
+        assertEquals(2, testGoalLog.size());
+        assertEquals(goal1, testGoalLog.getAll().get(0));
+        assertEquals(goal2, testGoalLog.getAll().get(1));
+    }
+
+    @Test
+    void testAddGoalRecordsEvent() {
+        EventLog.getInstance().clear();
+        testGoalLog.add(goal1);
+
+        assertEquals("Goal \"Master huck\" added to Goal Log.", lastEventDescription());
     }
 
     @Test
     void testRemoveGoal() {
-        testGoalLog.addGoal(goal1);
-        testGoalLog.addGoal(goal2);
-        testGoalLog.addGoal(goal3);
+        testGoalLog.add(goal1);
+        testGoalLog.add(goal2);
 
-        testGoalLog.removeGoal("Improve vertical");
+        assertTrue(testGoalLog.remove(goal1));
 
-        assertEquals(2, testGoalLog.getAllGoals().size());
-        assertEquals(goal1, testGoalLog.getAllGoals().get(0));
-        assertEquals(goal3, testGoalLog.getAllGoals().get(1));
+        assertEquals(1, testGoalLog.size());
+        assertEquals(goal2, testGoalLog.getAll().get(0));
+    }
 
-        testGoalLog.removeGoal("67"); // remove goal that isn't in goal log
-        assertEquals(2, testGoalLog.getAllGoals().size());
-        assertEquals(goal1, testGoalLog.getAllGoals().get(0));
-        assertEquals(goal3, testGoalLog.getAllGoals().get(1));
+    @Test
+    void testRemoveGoalNotInLog() {
+        testGoalLog.add(goal1);
 
-        testGoalLog.removeGoal("Master huck");
+        assertFalse(testGoalLog.remove(goal2));
+        assertEquals(1, testGoalLog.size());
+    }
 
-        assertEquals(1, testGoalLog.getAllGoals().size());
-        assertEquals(goal3, testGoalLog.getAllGoals().get(0));
+    @Test
+    void testRemoveByTitle() {
+        testGoalLog.add(goal1);
+        testGoalLog.add(goal2);
+        testGoalLog.add(goal3);
 
+        assertTrue(testGoalLog.removeByTitle("Improve vertical"));
+
+        assertEquals(2, testGoalLog.size());
+        assertEquals(goal1, testGoalLog.getAll().get(0));
+        assertEquals(goal3, testGoalLog.getAll().get(1));
+
+        assertTrue(testGoalLog.removeByTitle("Master huck"));
+        assertEquals(1, testGoalLog.size());
+        assertEquals(goal3, testGoalLog.getAll().get(0));
+
+        // boundary case: a goal with an empty title can still be found by title
+        assertTrue(testGoalLog.removeByTitle(""));
+        assertTrue(testGoalLog.isEmpty());
+    }
+
+    @Test
+    void testRemoveByTitleNotInLog() {
+        testGoalLog.add(goal1);
+        testGoalLog.add(goal2);
+
+        assertFalse(testGoalLog.removeByTitle("No such goal"));
+
+        assertEquals(2, testGoalLog.size());
+        assertEquals(goal1, testGoalLog.getAll().get(0));
+        assertEquals(goal2, testGoalLog.getAll().get(1));
+    }
+
+    @Test
+    void testRemoveByTitleFromEmptyLog() {
+        assertFalse(testGoalLog.removeByTitle("Master huck"));
+        assertTrue(testGoalLog.isEmpty());
+    }
+
+    @Test
+    void testMarkCompleted() {
+        testGoalLog.add(goal1);
+        testGoalLog.add(goal2);
+
+        testGoalLog.markCompleted(goal1);
+
+        assertTrue(goal1.isCompleted());
+        assertFalse(goal2.isCompleted());
+        assertEquals(1, testGoalLog.getCompletedGoals().size());
+        assertEquals(goal1, testGoalLog.getCompletedGoals().get(0));
+    }
+
+    @Test
+    void testMarkCompletedRecordsEvent() {
+        testGoalLog.add(goal1);
+        EventLog.getInstance().clear();
+        testGoalLog.markCompleted(goal1);
+
+        assertEquals("Goal \"Master huck\" marked as completed.", lastEventDescription());
+    }
+
+    @Test
+    void testMarkCompletedGoalNotInLog() {
+        testGoalLog.add(goal1);
+        EventLog.getInstance().clear();
+
+        testGoalLog.markCompleted(goal2); // goal2 was never added
+
+        assertFalse(goal2.isCompleted());
+        assertEquals("Event log cleared.", lastEventDescription());
+    }
+
+    @Test
+    void testMarkCompletedGoalAlreadyCompleted() {
+        testGoalLog.add(goal1);
+        testGoalLog.markCompleted(goal1);
+        EventLog.getInstance().clear();
+
+        testGoalLog.markCompleted(goal1); // already completed, so nothing happens
+
+        assertTrue(goal1.isCompleted());
+        assertEquals(1, testGoalLog.getCompletedGoals().size());
+        assertEquals("Event log cleared.", lastEventDescription());
     }
 
     @Test
     void testGetCompletedGoals() {
-        testGoalLog.addGoal(goal1);
-        testGoalLog.addGoal(goal2);
-        testGoalLog.addGoal(goal3);
+        testGoalLog.add(goal1);
+        testGoalLog.add(goal2);
+        testGoalLog.add(goal3);
 
-        goal2.markCompleted();
+        assertTrue(testGoalLog.getCompletedGoals().isEmpty());
 
+        testGoalLog.markCompleted(goal2);
         assertEquals(1, testGoalLog.getCompletedGoals().size());
         assertEquals(goal2, testGoalLog.getCompletedGoals().get(0));
 
-        goal1.markCompleted();
+        testGoalLog.markCompleted(goal1);
         assertEquals(2, testGoalLog.getCompletedGoals().size());
+        // completed goals come back in the order they were added, not completed
         assertEquals(goal1, testGoalLog.getCompletedGoals().get(0));
         assertEquals(goal2, testGoalLog.getCompletedGoals().get(1));
 
-        goal3.markCompleted();
+        testGoalLog.markCompleted(goal3);
         assertEquals(3, testGoalLog.getCompletedGoals().size());
-        assertEquals(goal1, testGoalLog.getCompletedGoals().get(0));
-        assertEquals(goal2, testGoalLog.getCompletedGoals().get(1));
-        assertEquals(goal3, testGoalLog.getCompletedGoals().get(2));
-
-
     }
-
 
     @Test
     void testToJsonEmptyLog() {
         JSONObject json = testGoalLog.toJson();
-        JSONArray goals = json.getJSONArray("goals");
-        assertEquals(0, goals.length());
+        assertEquals(0, json.getJSONArray("goals").length());
     }
 
     @Test
     void testToJsonWithGoals() {
-        testGoalLog.addGoal(goal1);
-        testGoalLog.addGoal(goal2);
-        
-        JSONObject json = testGoalLog.toJson();
-        JSONArray goals = json.getJSONArray("goals");
-        
+        testGoalLog.add(goal1);
+        testGoalLog.add(goal2);
+
+        JSONArray goals = testGoalLog.toJson().getJSONArray("goals");
         assertEquals(2, goals.length());
-        
+
         JSONObject firstGoal = goals.getJSONObject(0);
         assertEquals("Master huck", firstGoal.getString("title"));
-        assertFalse(firstGoal.getBoolean("completionStatus"));
+        assertEquals("2026-12-31", firstGoal.getString("targetDate"));
+        assertFalse(firstGoal.getBoolean("completed"));
     }
 
     @Test
     void testToJsonWithCompletedGoals() {
-        goal1.markCompleted();
-        testGoalLog.addGoal(goal1);
-        
-        JSONObject json = testGoalLog.toJson();
-        JSONArray goals = json.getJSONArray("goals");
-        
-        JSONObject firstGoal = goals.getJSONObject(0);
-        assertTrue(firstGoal.getBoolean("completionStatus"));
+        testGoalLog.add(goal1);
+        testGoalLog.markCompleted(goal1);
 
+        JSONArray goals = testGoalLog.toJson().getJSONArray("goals");
+        assertTrue(goals.getJSONObject(0).getBoolean("completed"));
     }
-    
+
+    // EFFECTS: returns the description of the most recent event in the event log
+    private String lastEventDescription() {
+        String description = "";
+        for (Event e : EventLog.getInstance()) {
+            description = e.getDescription();
+        }
+        return description;
+    }
 }

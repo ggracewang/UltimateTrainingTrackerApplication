@@ -1,74 +1,89 @@
 package model;
 
+import java.time.LocalDate;
+
 import org.json.JSONObject;
 
-public class Goal {
-    private String title;
-    private String description;
-    private Date date;
-    private Boolean completionStatus;
-    
-    // EFFECTS: constructs a new Goal with given title, description, completion date, 
-    //          and set completion status to false
-    public Goal(String title, String description, Date date) {
+import persistence.Writable;
+
+// Represents a training goal the player is working towards: a title, a
+// description, the date they want to finish it by, and whether it is done yet.
+//
+// Whether the goal is completed is the only thing about a goal that changes
+// over time, so it is the only field that is not final.
+public class Goal implements Writable {
+
+    private final String title;
+    private final String description;
+    private final LocalDate targetDate;
+    private boolean completed;
+
+    // REQUIRES: title != null, description != null, targetDate != null
+    // EFFECTS: constructs a goal with the given title, description, and target
+    //          completion date, which is not completed yet
+    public Goal(String title, String description, LocalDate targetDate) {
         this.title = title;
         this.description = description;
-        this.date = date;
-        this.completionStatus = false;
+        this.targetDate = targetDate;
+        this.completed = false;
     }
 
     // MODIFIES: this
-    // EFFECTS: sets the goal's title to new, given title
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    // MODIFIES: this
-    // EFFECTS: sets the goal's description to new, given description
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    // MODIFIES: this
-    // EFFECTS: sets the goal's completion date to new, given date
-    public void setCompletionDate(Date date) {
-        this.date = date;
-    }
-
-    // MODIFIES: this
-    // EFFECTS: marks a goal as completed by setting completion status to true
+    // EFFECTS: marks this goal as completed
     public void markCompleted() {
-        this.completionStatus = true;
+        this.completed = true;
     }
 
-    // EFFECTS: returns title of the goal
+    // EFFECTS: returns the title of this goal
     public String getTitle() {
-        return title; 
+        return title;
     }
 
-    // EFFECTS: returns description of the goal
+    // EFFECTS: returns the description of this goal
     public String getDescription() {
-        return description; 
+        return description;
     }
 
-    // EFFECTS: returns completion date of the goal
-    public Date getCompletionDate() {
-        return date; 
+    // EFFECTS: returns the date this goal is meant to be completed by
+    public LocalDate getTargetDate() {
+        return targetDate;
     }
 
-    // EFFECTS: returns completion status of the goal
-    public boolean getCompletionStatus() {
-        return completionStatus; 
+    // EFFECTS: returns this goal's target date formatted for display
+    public String getTargetDateAsString() {
+        return DateUtil.format(targetDate);
     }
 
-    // EFFECTS: returns this goal as a JSON object
+    // EFFECTS: returns true if this goal has been completed
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    // EFFECTS: returns true if this goal is unfinished and its target date has
+    //          already passed
+    public boolean isOverdue() {
+        return !completed && targetDate.isBefore(LocalDate.now());
+    }
+
+    // EFFECTS: returns "Completed", "Overdue", or "In progress" for this goal
+    public String getStatus() {
+        if (completed) {
+            return "Completed";
+        } else if (isOverdue()) {
+            return "Overdue";
+        }
+        return "In progress";
+    }
+
+    // EFFECTS: returns this goal as a JSON object, storing the target date as an
+    //          ISO-8601 string such as "2026-12-31"
+    @Override
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
         json.put("title", title);
         json.put("description", description);
-        json.put("date", date.toJson());
-        json.put("completionStatus", completionStatus);
+        json.put("targetDate", targetDate.toString());
+        json.put("completed", completed);
         return json;
     }
-
 }

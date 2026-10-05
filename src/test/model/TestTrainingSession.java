@@ -2,124 +2,80 @@ package model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.time.LocalDate;
+
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
 public class TestTrainingSession {
     private TrainingSession testSession1;
     private TrainingSession testSession2;
-    private Date date1;
-    private Date date2;
-    private Date date3;
+    private TrainingSession testSession3;
+    private LocalDate date1;
+    private LocalDate date2;
+    private LocalDate date3;
 
     @BeforeEach
     void runBefore() {
-        testSession1 = new TrainingSession();
-        testSession2 = new TrainingSession();
+        date1 = LocalDate.of(2026, 12, 31);  // boundary: last day of the year
+        date2 = LocalDate.of(2027, 1, 1);    // boundary: first day of the year
+        date3 = LocalDate.of(2024, 2, 29);   // boundary: leap day
 
-        date1 = new Date(31, 12, 2026);
-        date2 = new Date(1, 1, 2027);
-        date3 = new Date(11, 23, 2028);
+        testSession1 = new TrainingSession(date1, 60, "Forehand, Backhand", "Morning practice");
+        testSession2 = new TrainingSession(date2, 1, "", "");
+        testSession3 = new TrainingSession(date3, 300, "Endurance", "Cardio day");
     }
 
     @Test
     void testConstructor() {
-        assertEquals(null, testSession1.getDate());
-        assertEquals(0, testSession1.getDuration());
-        assertEquals("", testSession1.getSkills());
-        assertEquals("", testSession1.getSkills());
-    }
-
-
-    @Test
-    void testSetDate() {
-        //last day of year
-        testSession1.setDate(date1);
-        //first day of year
-        testSession2.setDate(date2);
-
         assertEquals(date1, testSession1.getDate());
+        assertEquals(60, testSession1.getDuration());
+        assertEquals("Forehand, Backhand", testSession1.getSkills());
+        assertEquals("Morning practice", testSession1.getNotes());
+    }
+
+    @Test
+    void testConstructorEmptyFields() {
         assertEquals(date2, testSession2.getDate());
-
-        //set date of a session again
-        testSession2.setDate(date3);
-        assertEquals(date3, testSession2.getDate());
-
-    }
-
-    @Test
-    void testSetDuration() {
-        testSession1.setDuration(1); // minimum
-        testSession2.setDuration(60);
-
-        assertEquals(1, testSession1.getDuration());
-        assertEquals(60, testSession2.getDuration());
-
-        //set duration of a session again
-        testSession2.setDuration(300);
-        assertEquals(300, testSession2.getDuration());
-
-    }
-
-    @Test
-    void testSetSkills() {
-        testSession1.setSkills("skill 1, skill 2");
-        testSession2.setSkills(""); //no skills specified
-
-        assertEquals("skill 1, skill 2", testSession1.getSkills());
+        assertEquals(1, testSession2.getDuration()); // boundary: shortest session
         assertEquals("", testSession2.getSkills());
-
-        //set skill of a session again
-        testSession1.setSkills("skill 3");
-        assertEquals("skill 3", testSession1.getSkills());
+        assertEquals("", testSession2.getNotes());
     }
 
     @Test
-    void testSetNotes() {
-        testSession1.setNotes("notes blah blah");
-        testSession2.setNotes(""); //no skills specified
+    void testConstructorLeapDay() {
+        assertEquals(date3, testSession3.getDate());
+        assertEquals(2024, testSession3.getDate().getYear());
+        assertEquals(2, testSession3.getDate().getMonthValue());
+        assertEquals(29, testSession3.getDate().getDayOfMonth());
+        assertEquals(300, testSession3.getDuration());
+    }
 
-        assertEquals("notes blah blah", testSession1.getNotes());
-        assertEquals("", testSession2.getNotes());
-
-        //set date of a session again, with special characters
-        testSession1.setNotes("new notes: / $ @");
-        assertEquals("new notes: / $ @", testSession1.getNotes());
+    @Test
+    void testGetDateAsString() {
+        assertEquals("12/31/2026", testSession1.getDateAsString());
+        assertEquals("1/1/2027", testSession2.getDateAsString());
+        assertEquals("2/29/2024", testSession3.getDateAsString());
     }
 
     @Test
     void testToJson() {
-        testSession1.setDate(date1);
-        testSession1.setDuration(60);
-        testSession1.setSkills("Forehand");
-        testSession1.setNotes("Good practice");
-    
         JSONObject json = testSession1.toJson();
-    
+
+        assertEquals("2026-12-31", json.getString("date"));
         assertEquals(60, json.getInt("duration"));
-        assertEquals("Forehand", json.getString("skills"));
-        assertEquals("Good practice", json.getString("notes"));
-    
-        JSONObject dateJson = json.getJSONObject("date");
-        assertEquals(31, dateJson.getInt("day"));
-        assertEquals(12, dateJson.getInt("month"));
-        assertEquals(2026, dateJson.getInt("year"));
+        assertEquals("Forehand, Backhand", json.getString("skills"));
+        assertEquals("Morning practice", json.getString("notes"));
     }
 
     @Test
     void testToJsonEmptyFields() {
-        testSession2.setDate(date2);
-        testSession2.setDuration(45);
-        testSession2.setSkills("");
-        testSession2.setNotes("");
-    
         JSONObject json = testSession2.toJson();
-    
-        assertEquals(45, json.getInt("duration"));
+
+        assertEquals("2027-01-01", json.getString("date"));
+        assertEquals(1, json.getInt("duration"));
         assertEquals("", json.getString("skills"));
         assertEquals("", json.getString("notes"));
     }
-
 }

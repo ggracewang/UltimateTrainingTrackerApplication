@@ -1,49 +1,50 @@
 package persistence;
 
-import model.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+
 import org.json.JSONObject;
-import java.io.*;
+
+import model.GoalLog;
+import model.TrainingLog;
 
 // Referenced from JsonSerializationDemo
 // https://github.students.cs.ubc.ca/CPSC210/JsonSerializationDemo
 
 // Represents a writer that writes JSON representation of training tracker data to file
 public class JsonWriter {
-    private static final int TAB = 4;
-    private PrintWriter writer;
-    private String destination;
 
-    // EFFECTS: constructs writer to write to destination file
+    private static final int TAB = 4;
+
+    private final String destination;
+    private PrintWriter writer;
+
+    // EFFECTS: constructs a writer to write to the given destination file
     public JsonWriter(String destination) {
         this.destination = destination;
     }
 
     // MODIFIES: this
-    // EFFECTS: opens writer; throws FileNotFoundException if destination file cannot
-    // be opened for writing
+    // EFFECTS: opens the writer; throws FileNotFoundException if the destination
+    //          file cannot be opened for writing
     public void open() throws FileNotFoundException {
         writer = new PrintWriter(new File(destination));
     }
 
     // MODIFIES: this
-    // EFFECTS: writes JSON representation of training log and goal log to file
+    // EFFECTS: writes the JSON representation of the given training log and goal
+    //          log to file
     public void write(TrainingLog tl, GoalLog gl) {
         JSONObject json = new JSONObject();
         json.put("trainingLog", tl.toJson());
         json.put("goalLog", gl.toJson());
-        saveToFile(json.toString(TAB));
+        writer.print(json.toString(TAB));
     }
 
     // MODIFIES: this
-    // EFFECTS: closes writer
+    // EFFECTS: closes the writer
     public void close() {
         writer.close();
     }
-
-    // MODIFIES: this
-    // EFFECTS: writes string to file
-    private void saveToFile(String json) {
-        writer.print(json);
-    }
 }
-
