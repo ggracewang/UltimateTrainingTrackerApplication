@@ -9,8 +9,11 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import model.TrainingSession;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,6 +121,119 @@ public class TestTrackerDatabase {
     void testOpeningInAMissingFolderThrows() {
         assertThrows(SQLException.class,
                 () -> new TrackerDatabase("./no-such-folder/tracker.db"));
+    }
+
+    @Test
+    void testAddSessionReturnsCopyCarryingTheNewId() throws SQLException {
+        TrainingSession before = new TrainingSession(LocalDate.of(2026, 5, 4), 90, "Hucks", "windy");
+        assertEquals(TrainingSession.NO_ID, before.getId());
+
+        TrainingSession after = db.addSession(before);
+
+        assertEquals(1, after.getId());          // first row in an empty table
+        assertTrue(after.isSaved());
+        assertEquals(LocalDate.of(2026, 5, 4), after.getDate());
+        assertEquals(90, after.getDuration());
+        assertEquals("Hucks", after.getSkills());
+        assertEquals("windy", after.getNotes());
+
+        // the original is untouched, because a session cannot be changed
+        assertEquals(TrainingSession.NO_ID, before.getId());
+    }
+
+    @Test
+    void testAddSessionGivesEachRowItsOwnId() throws SQLException {
+        TrainingSession first = db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 60, "", ""));
+        TrainingSession second = db.addSession(new TrainingSession(LocalDate.of(2026, 5, 6), 30, "", ""));
+
+        assertEquals(1, first.getId());
+        assertEquals(2, second.getId());
+    }
+
+    @Test
+    void testGetAllSessionsOnEmptyDatabase() throws SQLException {
+        assertTrue(db.getAllSessions().isEmpty());
+    }
+
+    @Test
+    void testGetAllSessionsRoundTripsEveryField() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 90, "Hucks, Defense", "felt good"));
+
+        List<TrainingSession> all = db.getAllSessions();
+
+        assertEquals(1, all.size());
+        assertEquals(LocalDate.of(2026, 5, 4), all.get(0).getDate());
+        assertEquals(90, all.get(0).getDuration());
+        assertEquals("Hucks, Defense", all.get(0).getSkills());
+        assertEquals("felt good", all.get(0).getNotes());
+        assertTrue(all.get(0).isSaved());
+    }
+
+    @Test
+    void testGetAllSessionsIsOrderedOldestFirst() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 7, 1), 10, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 20, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 6, 2), 30, "", ""));
+
+        List<TrainingSession> all = db.getAllSessions();
+
+        assertEquals(LocalDate.of(2026, 5, 4), all.get(0).getDate());
+        assertEquals(LocalDate.of(2026, 6, 2), all.get(1).getDate());
+        assertEquals(LocalDate.of(2026, 7, 1), all.get(2).getDate());
+    }
+
+    @Test
+    void testNotesContainingAnApostropheAreStoredCorrectly() throws SQLException {
+        // this is the value that would break a statement built by joining
+        // strings together, and is why every value goes through a placeholder
+        String awkward = "Sam's drill; DROP TABLE training_sessions;--";
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 60, "Handling", awkward));
+
+        List<TrainingSession> all = db.getAllSessions();
+
+        assertEquals(1, all.size());
+        assertEquals(awkward, all.get(0).getNotes());
+        assertTrue(tableNames(db).contains("training_sessions")); // table still there
+    }
+
+    @Test
+    void testDeleteSession() throws SQLException {
+        TrainingSession saved = db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 60, "", ""));
+
+        assertTrue(db.deleteSession(saved.getId()));
+        assertTrue(db.getAllSessions().isEmpty());
+    }
+
+    @Test
+    void testDeleteSessionThatIsNotThere() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 60, "", ""));
+
+        assertFalse(db.deleteSession(999));
+        assertEquals(1, db.getAllSessions().size()); // nothing else was removed
+    }
+
+    @Test
+    void testGetTotalMinutesOnEmptyDatabase() throws SQLException {
+        assertEquals(0, db.getTotalMinutes());
+    }
+
+    @Test
+    void testGetTotalMinutes() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 90, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 6), 45, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 8), 20, "", ""));
+
+        assertEquals(155, db.getTotalMinutes());
+    }
+
+    @Test
+    void testGetTotalMinutesFollowsDeletes() throws SQLException {
+        TrainingSession saved = db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 90, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 6), 45, "", ""));
+
+        db.deleteSession(saved.getId());
+
+        assertEquals(45, db.getTotalMinutes());
     }
 
     // EFFECTS: returns the names of every table in the given database
