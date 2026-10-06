@@ -1,6 +1,8 @@
 package model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 
@@ -77,5 +79,31 @@ public class TestTrainingSession {
         assertEquals(1, json.getInt("duration"));
         assertEquals("", json.getString("skills"));
         assertEquals("", json.getString("notes"));
+    }
+
+    @Test
+    void testNewSessionHasNoId() {
+        assertEquals(TrainingSession.NO_ID, testSession1.getId());
+        assertFalse(testSession1.isSaved());
+    }
+
+    @Test
+    void testSessionBuiltWithId() {
+        TrainingSession fromDatabase = new TrainingSession(7, date1, 60, "Forehand", "note");
+
+        assertEquals(7, fromDatabase.getId());
+        assertTrue(fromDatabase.isSaved());
+        assertEquals(date1, fromDatabase.getDate());
+        assertEquals(60, fromDatabase.getDuration());
+        assertEquals("Forehand", fromDatabase.getSkills());
+        assertEquals("note", fromDatabase.getNotes());
+    }
+
+    @Test
+    void testIdIsNotWrittenToJson() {
+        JSONObject json = new TrainingSession(7, date1, 60, "Forehand", "note").toJson();
+
+        assertFalse(json.has("id"));
+        assertEquals("2026-12-31", json.getString("date"));
     }
 }

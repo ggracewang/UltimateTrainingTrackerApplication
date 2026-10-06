@@ -134,4 +134,30 @@ public class TestGoal {
         assertEquals("2028-11-23", json.getString("targetDate"));
         assertFalse(json.getBoolean("completed"));
     }
+
+    @Test
+    void testNewGoalHasNoId() {
+        assertEquals(Goal.NO_ID, testGoal1.getId());
+        assertFalse(testGoal1.isSaved());
+    }
+
+    @Test
+    void testGoalBuiltWithId() {
+        Goal fromDatabase = new Goal(4, "Master huck", "Throw 50 meters consistently.", date1);
+
+        assertEquals(4, fromDatabase.getId());
+        assertTrue(fromDatabase.isSaved());
+        assertEquals("Master huck", fromDatabase.getTitle());
+        assertEquals("Throw 50 meters consistently.", fromDatabase.getDescription());
+        assertEquals(date1, fromDatabase.getTargetDate());
+        assertFalse(fromDatabase.isCompleted());
+    }
+
+    @Test
+    void testIdIsNotWrittenToJson() {
+        JSONObject json = new Goal(4, "Master huck", "Throw 50 meters.", date1).toJson();
+
+        assertFalse(json.has("id"));
+        assertEquals("Master huck", json.getString("title"));
+    }
 }
