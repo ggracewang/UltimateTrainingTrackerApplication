@@ -1,22 +1,25 @@
 package sqlplay;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.Random;
 
-// Builds data/tracker.db from scratch: creates the two tables and fills them
-// with a few months of made-up training sessions and goals, so that there is
-// enough data in there for queries like AVG and GROUP BY to be interesting.
+import persistence.TrackerDatabase;
+
+// Fills data/tracker.db with a few months of made-up training sessions and
+// goals, so that there is enough data in there for queries like AVG and
+// GROUP BY to be interesting.
 //
-// Running this again wipes the database and rebuilds it, so it is always safe
+// The tables themselves are created by TrackerDatabase, so there is only one
+// description of the schema in the project and this sandbox can never drift
+// out of step with the real application.
+//
+// Running this again empties both tables and refills them, so it is always safe
 // to re-run after you have been experimenting.
 public class SeedDatabase {
-
-    private static final String DB_URL = "jdbc:sqlite:./data/tracker.db";
 
     // the pool of skills sessions are drawn from, so that grouping by skill
     // has several sessions in each group
@@ -34,44 +37,32 @@ public class SeedDatabase {
         ""
     };
 
-    // EFFECTS: creates data/tracker.db with the schema and sample data,
-    //          replacing any database already there
+    // EFFECTS: fills data/tracker.db with sample data, replacing anything
+    //          already in its two tables
     public static void main(String[] args) throws SQLException {
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            createSchema(conn);
+        try (TrackerDatabase db = new TrackerDatabase()) {
+            Connection conn = db.getConnection();
+            emptyTables(conn);
             insertSessions(conn);
             insertGoals(conn);
-            System.out.println("Built data/tracker.db");
+            System.out.println("Filled data/tracker.db");
             System.out.println("Now put a query in data/scratch.sql and run sqlplay.SqlConsole.");
         }
     }
 
-    // MODIFIES: the database at DB_URL
-    // EFFECTS: drops any existing tables and creates the sessions and goals tables
-    private static void createSchema(Connection conn) throws SQLException {
+    // MODIFIES: the database
+    // EFFECTS: removes every row from both tables, and resets the counters that
+    //          hand out ids so that the first row is id 1 again
+    private static void emptyTables(Connection conn) throws SQLException {
         try (Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS sessions");
-            stmt.executeUpdate("DROP TABLE IF EXISTS goals");
-
-            stmt.executeUpdate(
-                    "CREATE TABLE sessions ("
-                    + "  id       INTEGER PRIMARY KEY AUTOINCREMENT,"
-                    + "  date     TEXT    NOT NULL,"
-                    + "  duration INTEGER NOT NULL,"
-                    + "  skills   TEXT    NOT NULL,"
-                    + "  notes    TEXT    NOT NULL)");
-
-            stmt.executeUpdate(
-                    "CREATE TABLE goals ("
-                    + "  id          INTEGER PRIMARY KEY AUTOINCREMENT,"
-                    + "  title       TEXT    NOT NULL UNIQUE,"
-                    + "  description TEXT    NOT NULL,"
-                    + "  target_date TEXT    NOT NULL,"
-                    + "  completed   INTEGER NOT NULL DEFAULT 0)");
+            stmt.executeUpdate("DELETE FROM training_sessions");
+            stmt.executeUpdate("DELETE FROM goals");
+            stmt.executeUpdate("DELETE FROM sqlite_sequence "
+                    + "WHERE name IN ('training_sessions', 'goals')");
         }
     }
 
-    // MODIFIES: the database at DB_URL
+    // MODIFIES: the database
     // EFFECTS: inserts about forty training sessions spread over the last five
     //          months. The random generator is given a fixed seed so that the
     //          same data is produced every time this is run.
@@ -80,7 +71,7 @@ public class SeedDatabase {
         LocalDate day = LocalDate.of(2026, 5, 4);
         LocalDate end = LocalDate.of(2026, 10, 1);
 
-        String sql = "INSERT INTO sessions (date, duration, skills, notes) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO training_sessions (date, duration, skills, notes) VALUES (?, ?, ?, ?)";
         int count = 0;
 
         conn.setAutoCommit(false);
@@ -103,7 +94,7 @@ public class SeedDatabase {
             conn.setAutoCommit(true);
         }
 
-        System.out.println("Inserted " + count + " sessions");
+        System.out.println("Inserted " + count + " training sessions");
     }
 
     // EFFECTS: returns one or two skill names joined by ", ", the same
@@ -118,7 +109,7 @@ public class SeedDatabase {
         return first.equals(second) ? first : first + ", " + second;
     }
 
-    // MODIFIES: the database at DB_URL
+    // MODIFIES: the database
     // EFFECTS: inserts eight goals: some finished, some still to come, and some
     //          whose target date has already passed without being finished
     private static void insertGoals(Connection conn) throws SQLException {
