@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 
@@ -19,27 +20,41 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
+import model.Event;
+import model.EventLog;
 import model.TrainingLog;
 import model.TrainingSession;
+import persistence.TrackerDatabase;
 
 // Represents the "Sessions" tab: a table of every logged training session, a
 // one-line summary of the totals underneath it, and the buttons for adding a
 // session, removing the selected session, and opening the stats window.
+//
+// Sessions live in the database, not in memory. Adding or removing one writes
+// to the database straight away and then reloads the table from it, so what is
+// on screen is always what is actually stored. There is nothing to save: the
+// Save button on the main window now only deals with goals.
+//
+// A TrainingLog is still kept as an in-memory copy of what was last read out of
+// the database, because the summary line and the stats window are built from
+// one. It is a view of the database, never the other way round.
 @ExcludeFromJacocoGeneratedReport
 class SessionsPanel extends JPanel {
 
     private static final String[] COLUMNS = {"#", "Date", "Duration (min)", "Skills", "Notes"};
 
+    private final TrackerDatabase database;
     private TrainingLog trainingLog;
     private final DefaultTableModel tableModel;
     private final JTable table;
     private final JLabel summaryLabel;
 
-    // REQUIRES: trainingLog != null
-    // EFFECTS: builds the sessions tab showing the given training log
-    SessionsPanel(TrainingLog trainingLog) {
+    // REQUIRES: database != null
+    // EFFECTS: builds the sessions tab and fills it from the given database
+    SessionsPanel(TrackerDatabase database) {
         super(new BorderLayout());
-        this.trainingLog = trainingLog;
+        this.database = database;
+        this.trainingLog = new TrainingLog();
         this.tableModel = createTableModel();
         this.table = UiTheme.createTable(tableModel);
         this.summaryLabel = UiTheme.createSummaryLabel();
@@ -53,17 +68,26 @@ class SessionsPanel extends JPanel {
     }
 
     // MODIFIES: this
-    // EFFECTS: points this tab at the given training log and redraws the table;
-    //          called after data has been loaded from file
-    void setLog(TrainingLog log) {
-        this.trainingLog = log;
-        refresh();
+    // EFFECTS: reads every session back out of the database, then rebuilds the
+    //          table and the summary line from what came back. Sessions are
+    //          restored rather than added so that reloading the table does not
+    //          fill the event log with entries the user did not cause.
+    void refresh() {
+        trainingLog = new TrainingLog();
+        try {
+            for (TrainingSession session : database.getAllSessions()) {
+                trainingLog.restore(session);
+            }
+        } catch (SQLException e) {
+            showDatabaseError("read your sessions from", e);
+        }
+        rebuildTable();
+        updateSummary();
     }
 
     // MODIFIES: this
-    // EFFECTS: rebuilds every table row from the current training log, then
-    //          updates the summary line
-    void refresh() {
+    // EFFECTS: replaces every table row with the sessions currently in memory
+    private void rebuildTable() {
         tableModel.setRowCount(0);
         int rowNumber = 1;
         for (TrainingSession s : trainingLog.getAll()) {
@@ -75,7 +99,6 @@ class SessionsPanel extends JPanel {
                     s.getNotes()
             });
         }
-        updateSummary();
     }
 
     // MODIFIES: this
@@ -133,6 +156,14 @@ class SessionsPanel extends JPanel {
         JOptionPane.showMessageDialog(this, message, "Invalid Input", JOptionPane.ERROR_MESSAGE);
     }
 
+    // EFFECTS: tells the user the database could not be used for the given
+    //          action, and prints the underlying cause to the console
+    private void showDatabaseError(String action, SQLException e) {
+        JOptionPane.showMessageDialog(this,
+                "Could not " + action + " the database.\n" + e.getMessage(),
+                "Database Error", JOptionPane.ERROR_MESSAGE);
+    }
+
     /**
      * Represents the action taken when the user wants to add a new training
      * session to the log.
@@ -143,8 +174,8 @@ class SessionsPanel extends JPanel {
             super("Add Session");
         }
 
-        // MODIFIES: trainingLog
-        // EFFECTS: shows the new-session form; if the user clicks OK, adds the
+        // MODIFIES: the database
+        // EFFECTS: shows the new-session form; if the user clicks OK, saves the
         //          session they described and redraws the table
         @Override
         public void actionPerformed(ActionEvent evt) {
@@ -180,13 +211,17 @@ class SessionsPanel extends JPanel {
         }
 
         // REQUIRES: fields.length >= 6
-        // MODIFIES: trainingLog
-        // EFFECTS: builds a session from what the user typed and adds it to the
-        //          log; shows an error dialog instead if the numbers cannot be
-        //          read, the date does not exist, or the duration is not positive
+        // MODIFIES: the database
+        // EFFECTS: builds a session from what the user typed and saves it to the
+        //          database; shows an error dialog instead if the numbers cannot
+        //          be read, the date does not exist, the duration is not
+        //          positive, or the database cannot be written to
         private void processSessionInput(JTextField[] fields) {
             try {
-                trainingLog.add(readSession(fields));
+                TrainingSession saved = database.addSession(readSession(fields));
+                EventLog.getInstance().logEvent(new Event(saved.getDuration()
+                        + " min training session on " + saved.getDateAsString()
+                        + " added to Training Log."));
                 refresh();
             } catch (NumberFormatException e) {
                 showError("Please enter whole numbers for Day, Month, Year, and Duration.");
@@ -194,6 +229,8 @@ class SessionsPanel extends JPanel {
                 showError("That date does not exist. Please check the day, month, and year.");
             } catch (IllegalArgumentException e) {
                 showError(e.getMessage());
+            } catch (SQLException e) {
+                showDatabaseError("save your session to", e);
             }
         }
 
@@ -226,8 +263,8 @@ class SessionsPanel extends JPanel {
             super("Remove Selected");
         }
 
-        // MODIFIES: trainingLog
-        // EFFECTS: asks the user to confirm, then removes the selected session
+        // MODIFIES: the database
+        // EFFECTS: asks the user to confirm, then deletes the selected session
         //          and redraws the table; warns them if no row is selected
         @Override
         public void actionPerformed(ActionEvent evt) {
@@ -242,8 +279,24 @@ class SessionsPanel extends JPanel {
                     "Delete session #" + (selectedRow + 1) + "? This cannot be undone.",
                     "Confirm Delete", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                trainingLog.remove(trainingLog.getAll().get(selectedRow));
+                deleteSelected(selectedRow);
+            }
+        }
+
+        // REQUIRES: 0 <= row < the number of sessions on screen
+        // MODIFIES: the database
+        // EFFECTS: deletes the session shown in the given row, looked up by the
+        //          id it was given when it was saved, and redraws the table
+        private void deleteSelected(int row) {
+            TrainingSession session = trainingLog.getAll().get(row);
+            try {
+                database.deleteSession(session.getId());
+                EventLog.getInstance().logEvent(new Event(session.getDuration()
+                        + " min training session on " + session.getDateAsString()
+                        + " removed from Training Log."));
                 refresh();
+            } catch (SQLException e) {
+                showDatabaseError("delete your session from", e);
             }
         }
     }

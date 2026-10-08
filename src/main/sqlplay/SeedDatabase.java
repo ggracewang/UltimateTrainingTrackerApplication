@@ -21,6 +21,10 @@ import persistence.TrackerDatabase;
 // to re-run after you have been experimenting.
 public class SeedDatabase {
 
+    // a practice database, kept separate from the real data/tracker.db that the
+    // application uses, so that sample data can never mix with real sessions
+    public static final String SANDBOX_PATH = "./data/sandbox.db";
+
     // the pool of skills sessions are drawn from, so that grouping by skill
     // has several sessions in each group
     private static final String[] SKILLS = {
@@ -40,13 +44,13 @@ public class SeedDatabase {
     // EFFECTS: fills data/tracker.db with sample data, replacing anything
     //          already in its two tables
     public static void main(String[] args) throws SQLException {
-        try (TrackerDatabase db = new TrackerDatabase()) {
+        try (TrackerDatabase db = new TrackerDatabase(SANDBOX_PATH)) {
             Connection conn = db.getConnection();
             emptyTables(conn);
             insertSessions(conn);
             insertGoals(conn);
-            System.out.println("Filled data/tracker.db");
-            System.out.println("Now put a query in data/scratch.sql and run sqlplay.SqlConsole.");
+            System.out.println("Filled " + SANDBOX_PATH);
+            System.out.println("Query it with: sqlplay.SqlConsole " + SANDBOX_PATH);
         }
     }
 

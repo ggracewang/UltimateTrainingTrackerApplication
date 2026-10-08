@@ -24,12 +24,21 @@ import java.util.List;
 // This is a learning tool, not part of the app. Delete it whenever you like.
 public class SqlConsole {
 
-    private static final String DB_URL = "jdbc:sqlite:./data/tracker.db";
+    // the database queried when no other one is named on the command line;
+    // this is the real application database, so that you can look at your own
+    // sessions and goals. Pass ./data/sandbox.db to query the practice data
+    // that SeedDatabase makes instead.
+    private static final String DEFAULT_DB = "./data/tracker.db";
     private static final Path SCRIPT = Paths.get("data", "scratch.sql");
     private static final int MAX_ROWS_SHOWN = 40;
 
-    // EFFECTS: runs every statement in data/scratch.sql and prints the results
+    // EFFECTS: runs every statement in data/scratch.sql against the database
+    //          named by the first argument, or the application database if no
+    //          argument is given, and prints the results
     public static void main(String[] args) throws IOException {
+        String dbPath = (args.length > 0) ? args[0] : DEFAULT_DB;
+        System.out.println("database: " + dbPath);
+
         String script = new String(Files.readAllBytes(SCRIPT), StandardCharsets.UTF_8);
         List<String> statements = splitIntoStatements(script);
 
@@ -38,7 +47,7 @@ public class SqlConsole {
             return;
         }
 
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPath)) {
             for (String sql : statements) {
                 runOne(conn, sql);
             }
