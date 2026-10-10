@@ -1,8 +1,8 @@
 # Ultimate Frisbee Training Tracker
 
 A desktop application in **Java** and **Swing** that helps ultimate frisbee players log their
-training, set goals, and see their progress over time. Training sessions and goals are saved to
-and loaded from a JSON file, so the data survives between runs.
+training, set goals, and see their progress over time. Everything is stored in a **SQLite**
+database and written the moment it changes, so nothing is ever lost and there is nothing to save.
 
 ## Project Description
 
@@ -40,8 +40,8 @@ interest in software development.
 - As a user, I want to be able to mark a goal as completed
 - As a user, I want to be able to view all my goals in my goal log
 - As a user, I want to be able to view all my completed goals
-- As a user, I want to be able to save my training log and goal log to file (if I choose to)
-- As a user, I want to be able to load my training log and goal log from file (if I choose to)
+- As a user, I want my sessions and goals to still be there the next time I open the app, without
+  having to remember to save them
 
 ## How to Run
 
@@ -57,19 +57,22 @@ accept a `lib/*` wildcard the way `javac` does, so the jars are listed out:
 
 ```
 java -jar lib/junit-platform-console-standalone-1.10.2.jar execute --scan-classpath \
-  -cp "bin;lib/json-20250517.jar;lib/JacocoExcludeFromReportAnnotation.jar"
+  -cp "bin;lib/sqlite-jdbc-3.41.2.2.jar;lib/JacocoExcludeFromReportAnnotation.jar"
 ```
 
-All 76 tests should pass. The commands above use Windows classpath separators (`;`); on macOS or
+All 74 tests should pass. The commands above use Windows classpath separators (`;`); on macOS or
 Linux use `:` instead.
 
 In VS Code, the Java extension picks the project up from `.vscode/settings.json` and `ui.Main` can
 be run directly.
 
+The database lives at `data/tracker.db` and is created automatically the first time the app runs,
+so a fresh clone needs no setup.
+
 ## Instructions for End User
 
-The main window has two tabs, and a **Save / Load / Exit** bar along the bottom that applies to
-both of them.
+The main window has two tabs. There is no Save button: every change is written to the database as
+it is made.
 
 **Sessions tab**
 
@@ -79,48 +82,61 @@ both of them.
 - You can add a training session by clicking **Add Session** and filling in the form.
 - You can remove a training session by clicking a row to select it, then clicking
   **Remove Selected**.
-- You can locate the visual component (a bar chart of how long each session lasted) by clicking
-  **View Stats**, which opens the Training Stats window. That window also reports your session
-  count, total hours, average session length, and longest session.
+- You can locate the visual component (a bar chart of how many minutes you trained in each month)
+  by clicking **View Stats**, which opens the Training Stats window. That window also reports your
+  session count, total hours, average session length, and longest session.
 
 **Goals tab**
 
 - You can view all of your goals by switching to the **Goals** tab. Each goal shows its target date
   and its status: *In progress*, *Overdue*, or *Completed*.
-- You can add a goal by clicking **Add Goal** and filling in the form.
+- You can add a goal by clicking **Add Goal** and filling in the form. Goal titles must be unique;
+  reusing one is refused with a message rather than an error.
 - You can mark a goal as completed by selecting its row and clicking **Mark Completed**.
 - You can view only your completed goals by ticking the **Show completed only** checkbox.
 - You can remove a goal by selecting its row and clicking **Remove Selected**.
 
-**Saving and loading**
+**Closing**
 
-- You can save the state of the application at any time by clicking **Save**.
-- You can reload the state of the application by clicking **Load**, or by clicking **Yes** when the
-  load prompt appears on startup.
-- You can quit by clicking **Exit** or the window's close button; either one offers to save your
-  data first. If the save fails the application stays open, so your data is not lost.
+- You can quit by clicking **Exit** or the window's close button. Neither asks whether to save,
+  because there is never unsaved work: closing the app cannot lose anything.
 
 ## Design Notes
 
-The two logs share a parent class. `TrainingLog` and `GoalLog` do almost exactly the same job: hold
-a list, add to it, remove from it, record an event describing the change, and write the list out as
-JSON. All of that lives once in the abstract class `Log<T extends Writable>`. Each subclass only
-supplies the parts that genuinely differ: the key its items are stored under in JSON, its name in
-event messages, and how to describe one of its items in words. This is the **template method**
-pattern — the parent owns the steps, the subclasses fill in the blanks.
+**Everything goes through the database.** `TrackerDatabase` owns the one connection and every
+statement the app runs. Each tab writes a change and then reloads its table from the database, so
+what is on screen is always what is actually stored rather than a copy that might have drifted.
 
-`Log.getAll()` hands back an unmodifiable view of the list rather than the list itself, so callers
-cannot sneak items in or out without going through `add` and `remove`, which is what keeps the
-event log honest.
+**The database does the arithmetic.** Totals, averages and the monthly chart are SQL queries, not
+Java loops. `getSessionStats()` returns the session count, total, average and longest from a single
+query, because the database can keep four running answers while reading the rows once.
+`getMinutesByMonth()` groups the sessions with `strftime('%Y-%m', date)` and sums each group, so a
+year of sessions comes back as twelve numbers instead of hundreds of rows.
 
-Dates use `java.time.LocalDate` from the standard library. Sessions and goals store their dates as
-ISO-8601 strings such as `"2026-12-31"` in the save file.
+**Every user-typed value is bound to a `?` placeholder**, never glued into a SQL string. A note
+containing an apostrophe is then stored as text rather than breaking the statement, and a note
+containing SQL cannot be run as SQL. There is a test that stores
+`Sam's drill; DROP TABLE training_sessions;--` and checks it comes back intact.
+
+**Model objects carry their row id.** `TrainingSession` and `Goal` hold the `id` the database gave
+them, which is how a selected table row is turned back into the right `UPDATE` or `DELETE`. A
+brand-new object has `NO_ID` until it is saved. Because `TrainingSession` is immutable, saving one
+returns a *new* copy carrying the id rather than changing the original.
+
+**`BarChartPanel` knows nothing about training.** It takes a list of labels and a list of numbers,
+so the same chart could show minutes per month, goals per month, or anything else counted up later.
+
+Dates use `java.time.LocalDate` and are stored as ISO-8601 text such as `2026-12-31`. That format
+sorts and compares correctly as plain text, which is why `WHERE date >= '2026-08-01'` works without
+SQLite needing a dedicated date type.
 
 `TrainingSession` is immutable: a logged session is a record of something that already happened, so
 every one of its fields is `final`. `Goal` is immutable too, apart from whether it has been
-completed, because that is the only thing about a goal that genuinely changes over time.
+completed, because that is the only thing about a goal that genuinely changes over time. Nothing in
+the UI calls `Goal.markCompleted()` directly — completing a goal always goes through the database
+by id, so an on-screen goal cannot be ticked off without the database hearing about it.
 
-## Phase 4: Task 2
+## Event log
 
 A sample of the event log printed to the console on exit:
 
@@ -135,49 +151,42 @@ Fri Mar 27 14:27:25 PDT 2026
 80 min training session on 3/2/2026 removed from Training Log.
 ```
 
-The application also logs goal changes and file access, so a longer session produces events like:
+Goal changes are logged the same way:
 
 ```
-Loaded 1 training session(s) and 0 goal(s) from file.
 Goal "Master huck" added to Goal Log.
 Goal "Master huck" marked as completed.
-Saved 2 training session(s) and 1 goal(s) to file.
 ```
 
-Loading from file deliberately logs a single summary event rather than one event per restored
-session, because reloading saved data is not the same kind of user action as logging a new session.
+Reloading a table from the database logs nothing. Only things the user actually did are recorded,
+so re-reading rows to redraw the screen does not fill the log with noise.
 
-## Phase 4: Task 3
+## History
 
-Two refactorings I identified, and then carried out.
+This started as a CPSC 210 term project and has since been rebuilt as a personal one. Two things
+changed substantially after the course ended.
 
-**1. The two log classes were nearly identical.** `TrainingLog` and `GoalLog` both stored a list,
-allowed items to be added and removed, and converted that data to JSON, with the same code written
-out twice. I pulled the shared behaviour up into an abstract `Log<T extends Writable>` parent class.
-Each subclass is now only the handful of lines that are actually specific to it, and a change to
-how logs work — for example making `remove` report whether it removed anything — gets made in one
-place instead of two.
+**The custom `Date` class was reinventing the standard library, badly.** The old `Date` held a day,
+a month and a year as plain integers with no validation, so nothing stopped a date like month 23
+from being created — and one of my own tests was constructing exactly that without failing. It also
+had no way to compare two dates. Replacing it with `java.time.LocalDate` deleted a whole class,
+made invalid dates impossible to construct, and made comparison a one-liner. `Goal.isOverdue()` is
+now simply `!completed && targetDate.isBefore(LocalDate.now())`.
 
-**2. The custom `Date` class was reinventing the standard library, badly.** The old `Date` class
-held a day, a month, and a year as plain integers with no validation, so nothing stopped a date
-like month 23 from being created — and one of my own tests was constructing exactly that without
-failing. It also had no way to compare two dates. Replacing it with `java.time.LocalDate` deleted
-a whole class, made invalid dates impossible to construct (the app now shows "That date does not
-exist" instead of silently accepting them), and made date comparison a one-liner. That immediately
-paid for itself: `Goal.isOverdue()` is now simply
-`!completed && targetDate.isBefore(LocalDate.now())`, which is what drives the *Overdue* status in
-the Goals tab. Writing that against the old class would have meant hand-comparing three integers
-and getting leap years right myself.
+**JSON files were replaced by a SQLite database.** The app used to hold everything in memory and
+write it all out to `trainingtracker.json` when the user clicked Save, which meant forgetting to
+click Save lost the work. Moving to SQLite removed the Save and Load buttons entirely, along with
+`JsonReader`, `JsonWriter`, `Writable`, and the `Log<T>` / `TrainingLog` / `GoalLog` hierarchy that
+existed to hold lists in memory and serialise them. The database holds the list now, so the classes
+that used to do that had nothing left to do.
 
-**What I would do next.** The two log tables in the UI are built and refreshed in much the same way
-in `SessionsPanel` and `GoalsPanel`. The shared styling already lives in `UiTheme`, but the
-"rebuild every row from the model, then update a summary line" logic is still written twice. A
-generic table panel parameterised by how to turn one item into a row would remove that last piece
-of duplication.
+**What I would do next.** The two tables in the UI are built and refreshed in much the same way in
+`SessionsPanel` and `GoalsPanel`. The shared styling already lives in `UiTheme`, but the "rebuild
+every row, then update a summary line" logic is still written twice. A generic table panel
+parameterised by how to turn one item into a row would remove that duplication.
 
 ## Attribution
 
 - `Event` and `EventLog` are taken from the course's AlarmSystem demo.
-- `JsonReader`, `JsonWriter`, and `Writable` follow the course's
-  [JsonSerializationDemo](https://github.students.cs.ubc.ca/CPSC210/JsonSerializationDemo).
 - The Swing window structure follows the AlarmSystem demo.
+- SQLite access uses the [Xerial sqlite-jdbc](https://github.com/xerial/sqlite-jdbc) driver.

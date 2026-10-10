@@ -189,8 +189,8 @@ public class TrackerDatabase implements AutoCloseable {
     //          Throws SQLException if the row cannot be written.
     public Goal addGoal(Goal goal) throws SQLException {
         // OR IGNORE tells SQLite to skip the row rather than fail when it would
-        // break the UNIQUE rule, which is the same thing GoalLog.add does in
-        // memory. executeUpdate then reports 0 rows written instead of 1.
+        // break the UNIQUE rule, so adding a duplicate is a quiet no-op rather
+        // than an error. executeUpdate then reports 0 rows written, not 1.
         String sql = "INSERT OR IGNORE INTO goals (title, description, target_date, completed) "
                 + "VALUES (?, ?, ?, ?)";
 

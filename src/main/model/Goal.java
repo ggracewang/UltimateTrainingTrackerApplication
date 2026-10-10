@@ -2,10 +2,6 @@ package model;
 
 import java.time.LocalDate;
 
-import org.json.JSONObject;
-
-import persistence.Writable;
-
 // Represents a training goal the player is working towards: a title, a
 // description, the date they want to finish it by, and whether it is done yet.
 //
@@ -15,7 +11,7 @@ import persistence.Writable;
 // A goal also carries an id, which is the number the database uses to tell one
 // saved row from another. A goal that has not been saved to the database yet
 // has the id NO_ID, because the database is what hands out real ids.
-public class Goal implements Writable {
+public class Goal {
 
     // the id of a goal that is not in the database yet; real ids start at 1
     public static final int NO_ID = 0;
@@ -102,18 +98,5 @@ public class Goal implements Writable {
             return "Overdue";
         }
         return "In progress";
-    }
-
-    // EFFECTS: returns this goal as a JSON object, storing the target date as an
-    //          ISO-8601 string such as "2026-12-31". The id is left out on
-    //          purpose: it belongs to the database, not to the save file.
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
-        json.put("title", title);
-        json.put("description", description);
-        json.put("targetDate", targetDate.toString());
-        json.put("completed", completed);
-        return json;
     }
 }

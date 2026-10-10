@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
-
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -109,31 +107,8 @@ public class TestGoal {
         assertEquals("Completed", overdueGoal.getStatus());
     }
 
-    @Test
-    void testToJson() {
-        JSONObject json = testGoal1.toJson();
 
-        assertEquals("Master huck", json.getString("title"));
-        assertEquals("Throw 50 meters consistently.", json.getString("description"));
-        assertEquals("2026-12-31", json.getString("targetDate"));
-        assertFalse(json.getBoolean("completed"));
-    }
 
-    @Test
-    void testToJsonCompletedGoal() {
-        testGoal1.markCompleted();
-        assertTrue(testGoal1.toJson().getBoolean("completed"));
-    }
-
-    @Test
-    void testToJsonEmptyFields() {
-        JSONObject json = testGoal3.toJson();
-
-        assertEquals("", json.getString("title"));
-        assertEquals("", json.getString("description"));
-        assertEquals("2028-11-23", json.getString("targetDate"));
-        assertFalse(json.getBoolean("completed"));
-    }
 
     @Test
     void testNewGoalHasNoId() {
@@ -153,11 +128,4 @@ public class TestGoal {
         assertFalse(fromDatabase.isCompleted());
     }
 
-    @Test
-    void testIdIsNotWrittenToJson() {
-        JSONObject json = new Goal(4, "Master huck", "Throw 50 meters.", date1).toJson();
-
-        assertFalse(json.has("id"));
-        assertEquals("Master huck", json.getString("title"));
-    }
 }

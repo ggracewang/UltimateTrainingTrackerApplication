@@ -2,10 +2,6 @@ package model;
 
 import java.time.LocalDate;
 
-import org.json.JSONObject;
-
-import persistence.Writable;
-
 // Represents one training session that has already happened: the day of the
 // session, how many minutes it lasted, the skills practised, and the player's
 // notes.
@@ -16,7 +12,7 @@ import persistence.Writable;
 // A session also carries an id, which is the number the database uses to tell
 // one saved row from another. A session that has not been saved to the database
 // yet has the id NO_ID, because the database is what hands out real ids.
-public class TrainingSession implements Writable {
+public class TrainingSession {
 
     // the id of a session that is not in the database yet; real ids start at 1
     public static final int NO_ID = 0;
@@ -81,18 +77,5 @@ public class TrainingSession implements Writable {
     // EFFECTS: returns the notes written about this session
     public String getNotes() {
         return notes;
-    }
-
-    // EFFECTS: returns this training session as a JSON object, storing the date
-    //          as an ISO-8601 string such as "2026-12-31". The id is left out
-    //          on purpose: it belongs to the database, not to the save file.
-    @Override
-    public JSONObject toJson() {
-        JSONObject json = new JSONObject();
-        json.put("date", date.toString());
-        json.put("duration", duration);
-        json.put("skills", skills);
-        json.put("notes", notes);
-        return json;
     }
 }

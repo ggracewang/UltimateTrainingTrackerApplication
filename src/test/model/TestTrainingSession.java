@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
-
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -61,25 +59,7 @@ public class TestTrainingSession {
         assertEquals("2/29/2024", testSession3.getDateAsString());
     }
 
-    @Test
-    void testToJson() {
-        JSONObject json = testSession1.toJson();
 
-        assertEquals("2026-12-31", json.getString("date"));
-        assertEquals(60, json.getInt("duration"));
-        assertEquals("Forehand, Backhand", json.getString("skills"));
-        assertEquals("Morning practice", json.getString("notes"));
-    }
-
-    @Test
-    void testToJsonEmptyFields() {
-        JSONObject json = testSession2.toJson();
-
-        assertEquals("2027-01-01", json.getString("date"));
-        assertEquals(1, json.getInt("duration"));
-        assertEquals("", json.getString("skills"));
-        assertEquals("", json.getString("notes"));
-    }
 
     @Test
     void testNewSessionHasNoId() {
@@ -99,11 +79,4 @@ public class TestTrainingSession {
         assertEquals("note", fromDatabase.getNotes());
     }
 
-    @Test
-    void testIdIsNotWrittenToJson() {
-        JSONObject json = new TrainingSession(7, date1, 60, "Forehand", "note").toJson();
-
-        assertFalse(json.has("id"));
-        assertEquals("2026-12-31", json.getString("date"));
-    }
 }
