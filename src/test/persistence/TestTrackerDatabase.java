@@ -2,6 +2,8 @@ package persistence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,6 +15,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import model.Goal;
 import model.TrainingSession;
 
 import org.junit.jupiter.api.AfterEach;
@@ -234,6 +237,147 @@ public class TestTrackerDatabase {
         db.deleteSession(saved.getId());
 
         assertEquals(45, db.getTotalMinutes());
+    }
+
+    @Test
+    void testAddGoalReturnsCopyCarryingTheNewId() throws SQLException {
+        Goal before = new Goal("Master the huck", "Flat 50m forehand", LocalDate.of(2026, 12, 31));
+        assertEquals(Goal.NO_ID, before.getId());
+
+        Goal after = db.addGoal(before);
+
+        assertEquals(1, after.getId());
+        assertTrue(after.isSaved());
+        assertEquals("Master the huck", after.getTitle());
+        assertEquals("Flat 50m forehand", after.getDescription());
+        assertEquals(LocalDate.of(2026, 12, 31), after.getTargetDate());
+        assertFalse(after.isCompleted());
+        assertEquals(Goal.NO_ID, before.getId()); // the original is untouched
+    }
+
+    @Test
+    void testAddGoalRefusesADuplicateTitle() throws SQLException {
+        db.addGoal(new Goal("Master the huck", "Flat 50m forehand", LocalDate.of(2026, 12, 31)));
+
+        Goal second = db.addGoal(new Goal("Master the huck", "different words", LocalDate.of(2027, 1, 1)));
+
+        assertNull(second);                         // null means "already there"
+        assertEquals(1, db.getAllGoals().size());   // and nothing was written
+        assertEquals("Flat 50m forehand", db.getAllGoals().get(0).getDescription());
+    }
+
+    @Test
+    void testAddGoalKeepsAnAlreadyCompletedGoalCompleted() throws SQLException {
+        Goal done = new Goal("Pull in bounds", "9 out of 10", LocalDate.of(2026, 6, 30));
+        done.markCompleted();
+
+        Goal saved = db.addGoal(done);
+
+        assertTrue(saved.isCompleted());
+        assertTrue(db.getAllGoals().get(0).isCompleted());
+    }
+
+    @Test
+    void testGetAllGoalsOnEmptyDatabase() throws SQLException {
+        assertTrue(db.getAllGoals().isEmpty());
+    }
+
+    @Test
+    void testGetAllGoalsIsOrderedBySoonestTargetDate() throws SQLException {
+        db.addGoal(new Goal("Later", "c", LocalDate.of(2027, 2, 28)));
+        db.addGoal(new Goal("Sooner", "a", LocalDate.of(2026, 6, 30)));
+        db.addGoal(new Goal("Middle", "b", LocalDate.of(2026, 12, 31)));
+
+        List<Goal> all = db.getAllGoals();
+
+        assertEquals("Sooner", all.get(0).getTitle());
+        assertEquals("Middle", all.get(1).getTitle());
+        assertEquals("Later", all.get(2).getTitle());
+    }
+
+    @Test
+    void testMarkGoalCompleted() throws SQLException {
+        Goal saved = db.addGoal(new Goal("Layout D", "one block", LocalDate.of(2026, 9, 1)));
+        assertFalse(saved.isCompleted());
+
+        assertTrue(db.markGoalCompleted(saved.getId()));
+        assertTrue(db.getAllGoals().get(0).isCompleted());
+    }
+
+    @Test
+    void testMarkGoalCompletedTwiceReportsNoSecondChange() throws SQLException {
+        Goal saved = db.addGoal(new Goal("Layout D", "one block", LocalDate.of(2026, 9, 1)));
+        db.markGoalCompleted(saved.getId());
+
+        assertFalse(db.markGoalCompleted(saved.getId())); // already done, nothing changed
+        assertTrue(db.getAllGoals().get(0).isCompleted()); // and it stayed done
+    }
+
+    @Test
+    void testMarkGoalCompletedOnAGoalThatIsNotThere() throws SQLException {
+        db.addGoal(new Goal("Layout D", "one block", LocalDate.of(2026, 9, 1)));
+
+        assertFalse(db.markGoalCompleted(999));
+        assertFalse(db.getAllGoals().get(0).isCompleted()); // no other goal was touched
+    }
+
+    @Test
+    void testGetCompletedGoalsReturnsOnlyTheFinishedOnes() throws SQLException {
+        Goal first = db.addGoal(new Goal("Done one", "a", LocalDate.of(2026, 6, 30)));
+        db.addGoal(new Goal("Still going", "b", LocalDate.of(2026, 12, 31)));
+        Goal third = db.addGoal(new Goal("Done two", "c", LocalDate.of(2026, 7, 1)));
+        db.markGoalCompleted(first.getId());
+        db.markGoalCompleted(third.getId());
+
+        List<Goal> completed = db.getCompletedGoals();
+
+        assertEquals(2, completed.size());
+        assertEquals("Done one", completed.get(0).getTitle());
+        assertEquals("Done two", completed.get(1).getTitle());
+        assertEquals(3, db.getAllGoals().size()); // the unfinished one is still stored
+    }
+
+    @Test
+    void testGetCompletedGoalsWhenNoneAreFinished() throws SQLException {
+        db.addGoal(new Goal("Still going", "b", LocalDate.of(2026, 12, 31)));
+
+        assertTrue(db.getCompletedGoals().isEmpty());
+    }
+
+    @Test
+    void testDeleteGoal() throws SQLException {
+        Goal saved = db.addGoal(new Goal("Learn the scoober", "over a defender", LocalDate.of(2027, 2, 28)));
+
+        assertTrue(db.deleteGoal(saved.getId()));
+        assertTrue(db.getAllGoals().isEmpty());
+    }
+
+    @Test
+    void testDeleteGoalThatIsNotThere() throws SQLException {
+        db.addGoal(new Goal("Learn the scoober", "over a defender", LocalDate.of(2027, 2, 28)));
+
+        assertFalse(db.deleteGoal(999));
+        assertEquals(1, db.getAllGoals().size());
+    }
+
+    @Test
+    void testDeletingAGoalFreesItsTitleForReuse() throws SQLException {
+        Goal saved = db.addGoal(new Goal("Master the huck", "first attempt", LocalDate.of(2026, 12, 31)));
+        db.deleteGoal(saved.getId());
+
+        Goal again = db.addGoal(new Goal("Master the huck", "second attempt", LocalDate.of(2027, 5, 1)));
+
+        assertNotNull(again);
+        assertEquals("second attempt", again.getDescription());
+    }
+
+    @Test
+    void testGoalTitleWithAnApostropheIsStoredCorrectly() throws SQLException {
+        String awkward = "Sam's drill; DROP TABLE goals;--";
+        db.addGoal(new Goal(awkward, "a", LocalDate.of(2026, 12, 31)));
+
+        assertEquals(awkward, db.getAllGoals().get(0).getTitle());
+        assertTrue(tableNames(db).contains("goals")); // table still there
     }
 
     // EFFECTS: returns the names of every table in the given database

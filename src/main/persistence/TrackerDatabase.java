@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import model.Goal;
 import model.TrainingSession;
 
 // Represents the SQLite database that the tracker's data is stored in, and the
@@ -130,6 +131,120 @@ public class TrackerDatabase implements AutoCloseable {
             rs.next();
             return rs.getInt(1);
         }
+    }
+
+    // REQUIRES: goal != null
+    // MODIFIES: the database
+    // EFFECTS: saves the given goal as a new row and returns a copy of it
+    //          carrying the id the database handed out. Returns null instead if
+    //          a goal with the same title is already stored, because the title
+    //          column is declared UNIQUE and two goals may not share one.
+    //          Throws SQLException if the row cannot be written.
+    public Goal addGoal(Goal goal) throws SQLException {
+        // OR IGNORE tells SQLite to skip the row rather than fail when it would
+        // break the UNIQUE rule, which is the same thing GoalLog.add does in
+        // memory. executeUpdate then reports 0 rows written instead of 1.
+        String sql = "INSERT OR IGNORE INTO goals (title, description, target_date, completed) "
+                + "VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement stmt =
+                connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, goal.getTitle());
+            stmt.setString(2, goal.getDescription());
+            stmt.setString(3, goal.getTargetDate().toString());
+            stmt.setInt(4, goal.isCompleted() ? 1 : 0);
+
+            if (stmt.executeUpdate() == 0) {
+                return null;
+            }
+
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                keys.next();
+                return rebuildGoal(keys.getInt(1), goal.getTitle(), goal.getDescription(),
+                        goal.getTargetDate().toString(), goal.isCompleted());
+            }
+        }
+    }
+
+    // EFFECTS: returns every goal in the database, soonest target date first,
+    //          with goals sharing a date in the order they were added;
+    //          returns an empty list if there are none.
+    //          Throws SQLException if the rows cannot be read.
+    public List<Goal> getAllGoals() throws SQLException {
+        return readGoals("SELECT id, title, description, target_date, completed FROM goals "
+                + "ORDER BY target_date, id");
+    }
+
+    // EFFECTS: returns only the goals that have been completed, soonest target
+    //          date first; returns an empty list if none are finished.
+    //          The database does the filtering, so the unfinished goals are
+    //          never read into memory at all.
+    //          Throws SQLException if the rows cannot be read.
+    public List<Goal> getCompletedGoals() throws SQLException {
+        return readGoals("SELECT id, title, description, target_date, completed FROM goals "
+                + "WHERE completed = 1 ORDER BY target_date, id");
+    }
+
+    // MODIFIES: the database
+    // EFFECTS: marks the goal with the given id as completed and returns true;
+    //          returns false if no goal has that id or it was already finished,
+    //          so nothing changed. Throws SQLException if it cannot be updated.
+    public boolean markGoalCompleted(int id) throws SQLException {
+        // "AND completed = 0" means re-ticking an already finished goal reports
+        // false rather than pretending something changed. The WHERE clause is
+        // what keeps this to one row: without it every goal would be marked.
+        String sql = "UPDATE goals SET completed = 1 WHERE id = ? AND completed = 0";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+    // MODIFIES: the database
+    // EFFECTS: removes the goal with the given id and returns true;
+    //          returns false if no goal has that id, so nothing was removed.
+    //          Throws SQLException if the row cannot be deleted.
+    public boolean deleteGoal(int id) throws SQLException {
+        String sql = "DELETE FROM goals WHERE id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+    // REQUIRES: sql selects id, title, description, target_date and completed
+    // EFFECTS: runs the given query and returns the goals it produced
+    private List<Goal> readGoals(String sql) throws SQLException {
+        List<Goal> goals = new ArrayList<>();
+
+        try (Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                goals.add(rebuildGoal(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("description"),
+                        rs.getString("target_date"),
+                        rs.getInt("completed") == 1));
+            }
+        }
+
+        return goals;
+    }
+
+    // EFFECTS: returns a Goal built from one row's worth of values. A goal is
+    //          always constructed unfinished and then ticked off, because being
+    //          completed is something that happens to a goal rather than
+    //          something it is created with.
+    private Goal rebuildGoal(int id, String title, String description,
+            String targetDate, boolean completed) {
+        Goal goal = new Goal(id, title, description, LocalDate.parse(targetDate));
+        if (completed) {
+            goal.markCompleted();
+        }
+        return goal;
     }
 
     // EFFECTS: returns the open connection to this database, for other classes
