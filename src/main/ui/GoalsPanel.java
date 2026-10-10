@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -22,18 +23,28 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
 import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
+import model.Event;
+import model.EventLog;
 import model.Goal;
-import model.GoalLog;
+import persistence.TrackerDatabase;
 
 // Represents the "Goals" tab: a table of the goals the player has set, a
 // checkbox for narrowing the table down to the goals they have finished, and
 // the buttons for adding a goal, marking one completed, and removing one.
+//
+// Goals live in the database. Adding, completing, or removing one writes to the
+// database straight away and then reloads the table from it, so what is on
+// screen is always what is actually stored and there is nothing to save.
+//
+// Nothing here ever calls goal.markCompleted() directly. That would tick a goal
+// off on screen without the database hearing about it, and the two would drift
+// apart. Completing a goal always goes through the database by its id.
 @ExcludeFromJacocoGeneratedReport
 class GoalsPanel extends JPanel {
 
     private static final String[] COLUMNS = {"#", "Goal", "Description", "Target Date", "Status"};
 
-    private GoalLog goalLog;
+    private final TrackerDatabase database;
     private final DefaultTableModel tableModel;
     private final JTable table;
     private final JCheckBox completedOnlyBox;
@@ -44,12 +55,16 @@ class GoalsPanel extends JPanel {
     // element N of this list
     private List<Goal> visibleGoals;
 
-    // REQUIRES: goalLog != null
-    // EFFECTS: builds the goals tab showing the given goal log
-    GoalsPanel(GoalLog goalLog) {
+    // every goal in the database, used for the counts on the summary line
+    private List<Goal> allGoals;
+
+    // REQUIRES: database != null
+    // EFFECTS: builds the goals tab and fills it from the given database
+    GoalsPanel(TrackerDatabase database) {
         super(new BorderLayout());
-        this.goalLog = goalLog;
+        this.database = database;
         this.visibleGoals = new ArrayList<>();
+        this.allGoals = new ArrayList<>();
         this.tableModel = createTableModel();
         this.table = UiTheme.createTable(tableModel);
         this.completedOnlyBox = createCompletedOnlyBox();
@@ -64,22 +79,26 @@ class GoalsPanel extends JPanel {
     }
 
     // MODIFIES: this
-    // EFFECTS: points this tab at the given goal log and redraws the table;
-    //          called after data has been loaded from file
-    void setLog(GoalLog log) {
-        this.goalLog = log;
-        refresh();
+    // EFFECTS: reads the goals back out of the database and rebuilds the table
+    //          and summary line from them. When the checkbox is ticked the
+    //          database itself does the filtering, so the unfinished goals are
+    //          never read into memory at all.
+    void refresh() {
+        try {
+            allGoals = database.getAllGoals();
+            visibleGoals = completedOnlyBox.isSelected()
+                    ? database.getCompletedGoals()
+                    : allGoals;
+        } catch (SQLException e) {
+            showDatabaseError("read your goals from", e);
+        }
+        rebuildTable();
+        updateSummary();
     }
 
     // MODIFIES: this
-    // EFFECTS: rebuilds every table row from the current goal log, showing only
-    //          completed goals if the checkbox is ticked, then updates the
-    //          summary line
-    void refresh() {
-        visibleGoals = completedOnlyBox.isSelected()
-                ? goalLog.getCompletedGoals()
-                : new ArrayList<>(goalLog.getAll());
-
+    // EFFECTS: replaces every table row with the goals currently on show
+    private void rebuildTable() {
         tableModel.setRowCount(0);
         int rowNumber = 1;
         for (Goal g : visibleGoals) {
@@ -91,26 +110,35 @@ class GoalsPanel extends JPanel {
                     g.getStatus()
             });
         }
-        updateSummary();
     }
 
     // MODIFIES: this
     // EFFECTS: writes how many goals are completed and how many are overdue into
     //          the summary line below the table
     private void updateSummary() {
-        if (goalLog.isEmpty()) {
+        if (allGoals.isEmpty()) {
             summaryLabel.setText("No goals set yet.");
             return;
         }
         summaryLabel.setText(String.format("%d of %d goal(s) completed   %d overdue",
-                goalLog.getCompletedGoals().size(), goalLog.size(), countOverdue()));
+                countCompleted(), allGoals.size(), countOverdue()));
     }
 
-    // EFFECTS: returns how many goals in the log are unfinished and past their
-    //          target date
+    // EFFECTS: returns how many goals have been completed
+    private int countCompleted() {
+        int completed = 0;
+        for (Goal g : allGoals) {
+            if (g.isCompleted()) {
+                completed++;
+            }
+        }
+        return completed;
+    }
+
+    // EFFECTS: returns how many goals are unfinished and past their target date
     private int countOverdue() {
         int overdue = 0;
-        for (Goal g : goalLog.getAll()) {
+        for (Goal g : allGoals) {
             if (g.isOverdue()) {
                 overdue++;
             }
@@ -195,6 +223,14 @@ class GoalsPanel extends JPanel {
         JOptionPane.showMessageDialog(this, message, "Invalid Input", JOptionPane.ERROR_MESSAGE);
     }
 
+    // EFFECTS: tells the user the database could not be used for the given
+    //          action, and shows the underlying cause
+    private void showDatabaseError(String action, SQLException e) {
+        JOptionPane.showMessageDialog(this,
+                "Could not " + action + " the database.\n" + e.getMessage(),
+                "Database Error", JOptionPane.ERROR_MESSAGE);
+    }
+
     /**
      * Represents the action taken when the user wants to add a new goal to
      * their goal log.
@@ -205,8 +241,8 @@ class GoalsPanel extends JPanel {
             super("Add Goal");
         }
 
-        // MODIFIES: goalLog
-        // EFFECTS: shows the new-goal form; if the user clicks OK, adds the goal
+        // MODIFIES: the database
+        // EFFECTS: shows the new-goal form; if the user clicks OK, saves the goal
         //          they described and redraws the table
         @Override
         public void actionPerformed(ActionEvent evt) {
@@ -242,21 +278,39 @@ class GoalsPanel extends JPanel {
         }
 
         // REQUIRES: fields.length >= 5
-        // MODIFIES: goalLog
-        // EFFECTS: builds a goal from what the user typed and adds it to the log;
-        //          shows an error dialog instead if the numbers cannot be read,
-        //          the date does not exist, or the title is blank
+        // MODIFIES: the database
+        // EFFECTS: builds a goal from what the user typed and saves it; shows an
+        //          error dialog instead if the numbers cannot be read, the date
+        //          does not exist, the title is blank, a goal with that title is
+        //          already stored, or the database cannot be written to
         private void processGoalInput(JTextField[] fields) {
             try {
-                goalLog.add(readGoal(fields));
-                refresh();
+                saveGoal(readGoal(fields));
             } catch (NumberFormatException e) {
                 showError("Please enter whole numbers for the target day, month, and year.");
             } catch (DateTimeException e) {
                 showError("That date does not exist. Please check the day, month, and year.");
             } catch (IllegalArgumentException e) {
                 showError(e.getMessage());
+            } catch (SQLException e) {
+                showDatabaseError("save your goal to", e);
             }
+        }
+
+        // REQUIRES: goal != null
+        // MODIFIES: the database
+        // EFFECTS: saves the given goal and redraws the table; tells the user
+        //          instead if they already have a goal with that title, which is
+        //          what addGoal returning null means
+        private void saveGoal(Goal goal) throws SQLException {
+            Goal saved = database.addGoal(goal);
+            if (saved == null) {
+                showError("You already have a goal called \"" + goal.getTitle() + "\".");
+                return;
+            }
+            EventLog.getInstance().logEvent(new Event(
+                    "Goal \"" + saved.getTitle() + "\" added to Goal Log."));
+            refresh();
         }
 
         // REQUIRES: fields.length >= 5
@@ -286,9 +340,9 @@ class GoalsPanel extends JPanel {
             super("Mark Completed");
         }
 
-        // MODIFIES: goalLog
-        // EFFECTS: marks the selected goal as completed and redraws the table;
-        //          tells the user if it was already completed
+        // MODIFIES: the database
+        // EFFECTS: marks the selected goal as completed in the database and
+        //          redraws the table; tells the user if it was already completed
         @Override
         public void actionPerformed(ActionEvent evt) {
             Goal selected = getSelectedGoal();
@@ -301,8 +355,23 @@ class GoalsPanel extends JPanel {
                         "Already Completed", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
-            goalLog.markCompleted(selected);
-            refresh();
+            complete(selected);
+        }
+
+        // REQUIRES: goal != null and is stored in the database
+        // MODIFIES: the database
+        // EFFECTS: ticks the given goal off by its id and redraws the table. The
+        //          goal object on screen is never changed directly, so the table
+        //          can only ever show what the database actually holds.
+        private void complete(Goal goal) {
+            try {
+                database.markGoalCompleted(goal.getId());
+                EventLog.getInstance().logEvent(new Event(
+                        "Goal \"" + goal.getTitle() + "\" marked as completed."));
+                refresh();
+            } catch (SQLException e) {
+                showDatabaseError("update your goal in", e);
+            }
         }
     }
 
@@ -316,8 +385,8 @@ class GoalsPanel extends JPanel {
             super("Remove Selected");
         }
 
-        // MODIFIES: goalLog
-        // EFFECTS: asks the user to confirm, then removes the selected goal and
+        // MODIFIES: the database
+        // EFFECTS: asks the user to confirm, then deletes the selected goal and
         //          redraws the table
         @Override
         public void actionPerformed(ActionEvent evt) {
@@ -329,8 +398,21 @@ class GoalsPanel extends JPanel {
                     "Delete the goal \"" + selected.getTitle() + "\"? This cannot be undone.",
                     "Confirm Delete", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                goalLog.remove(selected);
+                delete(selected);
+            }
+        }
+
+        // REQUIRES: goal != null and is stored in the database
+        // MODIFIES: the database
+        // EFFECTS: deletes the given goal by its id and redraws the table
+        private void delete(Goal goal) {
+            try {
+                database.deleteGoal(goal.getId());
+                EventLog.getInstance().logEvent(new Event(
+                        "Goal \"" + goal.getTitle() + "\" removed from Goal Log."));
                 refresh();
+            } catch (SQLException e) {
+                showDatabaseError("delete your goal from", e);
             }
         }
     }
