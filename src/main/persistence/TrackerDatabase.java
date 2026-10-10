@@ -8,7 +8,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import model.Goal;
 import model.TrainingSession;
@@ -131,6 +133,51 @@ public class TrackerDatabase implements AutoCloseable {
             rs.next();
             return rs.getInt(1);
         }
+    }
+
+    // EFFECTS: returns how many sessions there are, how many minutes they come
+    //          to, how long the average one is, and how long the longest one
+    //          is. All four come back from a single query, because the database
+    //          can work out several answers while looking at the rows once.
+    //          Every number is 0 when there are no sessions at all.
+    //          Throws SQLException if the figures cannot be read.
+    public SessionStats getSessionStats() throws SQLException {
+        // COUNT is 0 for an empty table, but SUM, AVG and MAX are all NULL.
+        // getInt and getDouble read a NULL back as 0, which is the answer we
+        // want in each case, so no special handling is needed.
+        String sql = "SELECT COUNT(*), SUM(duration), AVG(duration), MAX(duration) "
+                + "FROM training_sessions";
+
+        try (Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            rs.next();
+            return new SessionStats(rs.getInt(1), rs.getInt(2), rs.getDouble(3), rs.getInt(4));
+        }
+    }
+
+    // EFFECTS: returns how many minutes were practised in each month that has
+    //          at least one session, oldest month first, keyed by the month as
+    //          "YYYY-MM". Months with no training are simply absent.
+    //          Throws SQLException if the figures cannot be read.
+    public Map<String, Integer> getMinutesByMonth() throws SQLException {
+        // strftime chops the first seven characters off the date, turning
+        // "2026-05-04" into "2026-05". GROUP BY then gathers every row sharing
+        // a month into one group, and SUM adds up each group separately, so one
+        // row comes back per month instead of one per session.
+        String sql = "SELECT strftime('%Y-%m', date) AS month, SUM(duration) AS minutes "
+                + "FROM training_sessions GROUP BY month ORDER BY month";
+
+        // LinkedHashMap keeps the months in the order the query returned them
+        Map<String, Integer> byMonth = new LinkedHashMap<>();
+
+        try (Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                byMonth.put(rs.getString("month"), rs.getInt("minutes"));
+            }
+        }
+
+        return byMonth;
     }
 
     // REQUIRES: goal != null

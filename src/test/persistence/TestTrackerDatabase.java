@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import model.Goal;
 import model.TrainingSession;
@@ -378,6 +379,100 @@ public class TestTrackerDatabase {
 
         assertEquals(awkward, db.getAllGoals().get(0).getTitle());
         assertTrue(tableNames(db).contains("goals")); // table still there
+    }
+
+    @Test
+    void testGetSessionStatsOnEmptyDatabase() throws SQLException {
+        SessionStats stats = db.getSessionStats();
+
+        assertTrue(stats.isEmpty());
+        assertEquals(0, stats.getSessionCount());
+        assertEquals(0, stats.getTotalMinutes());
+        assertEquals(0.0, stats.getTotalHours(), 0.001);
+        assertEquals(0.0, stats.getAverageMinutes(), 0.001);
+        assertEquals(0, stats.getLongestMinutes());
+    }
+
+    @Test
+    void testGetSessionStats() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 90, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 6), 30, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 8), 60, "", ""));
+
+        SessionStats stats = db.getSessionStats();
+
+        assertFalse(stats.isEmpty());
+        assertEquals(3, stats.getSessionCount());
+        assertEquals(180, stats.getTotalMinutes());
+        assertEquals(3.0, stats.getTotalHours(), 0.001);
+        assertEquals(60.0, stats.getAverageMinutes(), 0.001);
+        assertEquals(90, stats.getLongestMinutes());
+    }
+
+    @Test
+    void testGetSessionStatsAgreesWithTheOtherQueries() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 45, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 6), 75, "", ""));
+
+        SessionStats stats = db.getSessionStats();
+
+        // the one combined query must give the same answers as asking separately
+        assertEquals(db.getAllSessions().size(), stats.getSessionCount());
+        assertEquals(db.getTotalMinutes(), stats.getTotalMinutes());
+    }
+
+    @Test
+    void testGetMinutesByMonthOnEmptyDatabase() throws SQLException {
+        assertTrue(db.getMinutesByMonth().isEmpty());
+    }
+
+    @Test
+    void testGetMinutesByMonthAddsUpEachMonthSeparately() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 60, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 20), 30, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 7, 1), 45, "", ""));
+
+        Map<String, Integer> byMonth = db.getMinutesByMonth();
+
+        assertEquals(2, byMonth.size());        // two months, not three sessions
+        assertEquals(90, byMonth.get("2026-05"));  // the two May sessions combined
+        assertEquals(45, byMonth.get("2026-07"));
+    }
+
+    @Test
+    void testGetMinutesByMonthSkipsMonthsWithNoTraining() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 60, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 8, 4), 60, "", ""));
+
+        Map<String, Integer> byMonth = db.getMinutesByMonth();
+
+        assertEquals(2, byMonth.size());
+        assertFalse(byMonth.containsKey("2026-06")); // June had no sessions at all
+    }
+
+    @Test
+    void testGetMinutesByMonthIsOrderedOldestFirst() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 12, 1), 10, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 2, 1), 20, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 7, 1), 30, "", ""));
+
+        List<String> months = new ArrayList<>(db.getMinutesByMonth().keySet());
+
+        assertEquals(List.of("2026-02", "2026-07", "2026-12"), months);
+    }
+
+    @Test
+    void testMinutesByMonthTotalMatchesTheOverallTotal() throws SQLException {
+        db.addSession(new TrainingSession(LocalDate.of(2026, 5, 4), 60, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 6, 4), 25, "", ""));
+        db.addSession(new TrainingSession(LocalDate.of(2026, 6, 9), 35, "", ""));
+
+        int summed = 0;
+        for (int minutes : db.getMinutesByMonth().values()) {
+            summed += minutes;
+        }
+
+        assertEquals(db.getTotalMinutes(), summed);
     }
 
     // EFFECTS: returns the names of every table in the given database

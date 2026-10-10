@@ -7,6 +7,8 @@ import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -22,8 +24,8 @@ import javax.swing.table.DefaultTableModel;
 import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
 import model.Event;
 import model.EventLog;
-import model.TrainingLog;
 import model.TrainingSession;
+import persistence.SessionStats;
 import persistence.TrackerDatabase;
 
 // Represents the "Sessions" tab: a table of every logged training session, a
@@ -32,29 +34,32 @@ import persistence.TrackerDatabase;
 //
 // Sessions live in the database, not in memory. Adding or removing one writes
 // to the database straight away and then reloads the table from it, so what is
-// on screen is always what is actually stored. There is nothing to save: the
-// Save button on the main window now only deals with goals.
+// on screen is always what is actually stored, and there is nothing to save.
 //
-// A TrainingLog is still kept as an in-memory copy of what was last read out of
-// the database, because the summary line and the stats window are built from
-// one. It is a view of the database, never the other way round.
+// The totals on the summary line are not counted up from the rows on screen.
+// They come back from their own query, so the database does the arithmetic and
+// the answer is about everything stored rather than everything displayed.
 @ExcludeFromJacocoGeneratedReport
 class SessionsPanel extends JPanel {
 
     private static final String[] COLUMNS = {"#", "Date", "Duration (min)", "Skills", "Notes"};
 
     private final TrackerDatabase database;
-    private TrainingLog trainingLog;
     private final DefaultTableModel tableModel;
     private final JTable table;
     private final JLabel summaryLabel;
+
+    // the sessions currently shown in the table; row N of the table is element
+    // N of this list, which is how a selected row is turned back into the id
+    // its session was saved under
+    private List<TrainingSession> sessions;
 
     // REQUIRES: database != null
     // EFFECTS: builds the sessions tab and fills it from the given database
     SessionsPanel(TrackerDatabase database) {
         super(new BorderLayout());
         this.database = database;
-        this.trainingLog = new TrainingLog();
+        this.sessions = new ArrayList<>();
         this.tableModel = createTableModel();
         this.table = UiTheme.createTable(tableModel);
         this.summaryLabel = UiTheme.createSummaryLabel();
@@ -68,29 +73,26 @@ class SessionsPanel extends JPanel {
     }
 
     // MODIFIES: this
-    // EFFECTS: reads every session back out of the database, then rebuilds the
-    //          table and the summary line from what came back. Sessions are
-    //          restored rather than added so that reloading the table does not
-    //          fill the event log with entries the user did not cause.
+    // EFFECTS: reads the sessions and the summary figures back out of the
+    //          database, then rebuilds the table and the summary line. The
+    //          figures come from their own query rather than being counted up
+    //          from the rows, so the database does the arithmetic.
     void refresh() {
-        trainingLog = new TrainingLog();
         try {
-            for (TrainingSession session : database.getAllSessions()) {
-                trainingLog.restore(session);
-            }
+            sessions = database.getAllSessions();
+            updateSummary(database.getSessionStats());
         } catch (SQLException e) {
             showDatabaseError("read your sessions from", e);
         }
         rebuildTable();
-        updateSummary();
     }
 
     // MODIFIES: this
-    // EFFECTS: replaces every table row with the sessions currently in memory
+    // EFFECTS: replaces every table row with the sessions last read
     private void rebuildTable() {
         tableModel.setRowCount(0);
         int rowNumber = 1;
-        for (TrainingSession s : trainingLog.getAll()) {
+        for (TrainingSession s : sessions) {
             tableModel.addRow(new Object[]{
                     rowNumber++,
                     s.getDateAsString(),
@@ -101,17 +103,17 @@ class SessionsPanel extends JPanel {
         }
     }
 
+    // REQUIRES: stats != null
     // MODIFIES: this
     // EFFECTS: writes the session count and total time practised into the
     //          summary line below the table
-    private void updateSummary() {
-        if (trainingLog.isEmpty()) {
+    private void updateSummary(SessionStats stats) {
+        if (stats.isEmpty()) {
             summaryLabel.setText("No sessions logged yet.");
             return;
         }
         summaryLabel.setText(String.format("%d session(s)   %d min total   %.1f hours practised",
-                trainingLog.size(), trainingLog.getTotalDurationPracticed(),
-                trainingLog.getTotalHoursPracticed()));
+                stats.getSessionCount(), stats.getTotalMinutes(), stats.getTotalHours()));
     }
 
     // EFFECTS: returns a table model with this tab's column headers, no rows,
@@ -288,7 +290,7 @@ class SessionsPanel extends JPanel {
         // EFFECTS: deletes the session shown in the given row, looked up by the
         //          id it was given when it was saved, and redraws the table
         private void deleteSelected(int row) {
-            TrainingSession session = trainingLog.getAll().get(row);
+            TrainingSession session = sessions.get(row);
             try {
                 database.deleteSession(session.getId());
                 EventLog.getInstance().logEvent(new Event(session.getDuration()
@@ -315,13 +317,13 @@ class SessionsPanel extends JPanel {
         //          chart yet if no sessions have been logged
         @Override
         public void actionPerformed(ActionEvent evt) {
-            if (trainingLog.isEmpty()) {
+            if (sessions.isEmpty()) {
                 JOptionPane.showMessageDialog(SessionsPanel.this,
                         "No sessions yet. Add some sessions first.",
                         "No Data", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
-            new StatsWindow(trainingLog);
+            new StatsWindow(database);
         }
     }
 }
