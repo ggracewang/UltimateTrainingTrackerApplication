@@ -1,7 +1,7 @@
 package ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
+
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
@@ -12,7 +12,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
+
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -45,6 +45,7 @@ class GoalsPanel extends JPanel {
     private static final String[] COLUMNS = {"#", "Goal", "Description", "Target Date", "Status"};
 
     private final TrackerDatabase database;
+    private final Runnable onDataChanged;
     private final DefaultTableModel tableModel;
     private final JTable table;
     private final JCheckBox completedOnlyBox;
@@ -60,9 +61,10 @@ class GoalsPanel extends JPanel {
 
     // REQUIRES: database != null
     // EFFECTS: builds the goals tab and fills it from the given database
-    GoalsPanel(TrackerDatabase database) {
+    GoalsPanel(TrackerDatabase database, Runnable onDataChanged) {
         super(new BorderLayout());
         this.database = database;
+        this.onDataChanged = onDataChanged;
         this.visibleGoals = new ArrayList<>();
         this.allGoals = new ArrayList<>();
         this.tableModel = createTableModel();
@@ -70,8 +72,8 @@ class GoalsPanel extends JPanel {
         this.completedOnlyBox = createCompletedOnlyBox();
         this.summaryLabel = UiTheme.createSummaryLabel();
 
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
+        setBackground(UiTheme.PAPER);
+        setBorder(BorderFactory.createEmptyBorder(0, 26, 10, 26));
         add(createNorth(), BorderLayout.NORTH);
         add(createScrollPane(), BorderLayout.CENTER);
         add(createSouth(), BorderLayout.SOUTH);
@@ -94,6 +96,7 @@ class GoalsPanel extends JPanel {
         }
         rebuildTable();
         updateSummary();
+        onDataChanged.run();
     }
 
     // MODIFIES: this
@@ -164,6 +167,7 @@ class GoalsPanel extends JPanel {
         box.setFont(UiTheme.SMALL_FONT);
         box.setForeground(UiTheme.LABEL_FG);
         box.setOpaque(false);
+        box.setFocusPainted(false);
         box.addActionListener(e -> refresh());
         return box;
     }
@@ -173,7 +177,7 @@ class GoalsPanel extends JPanel {
     private JPanel createNorth() {
         JPanel north = new JPanel(new BorderLayout());
         north.setOpaque(false);
-        north.add(UiTheme.createSectionLabel("Goals"), BorderLayout.WEST);
+        north.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
         north.add(completedOnlyBox, BorderLayout.EAST);
         return north;
     }
@@ -184,19 +188,20 @@ class GoalsPanel extends JPanel {
         table.getColumnModel().getColumn(3).setPreferredWidth(90);
         table.getColumnModel().getColumn(4).setPreferredWidth(80);
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(UiTheme.BORDER));
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setViewportBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(UiTheme.PAPER);
         return scrollPane;
     }
 
     // EFFECTS: returns the summary line and this tab's row of buttons, stacked
     private JPanel createSouth() {
-        JPanel buttons = new JPanel();
+        JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 0));
         buttons.setOpaque(false);
-        buttons.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
-        buttons.add(new JButton(new AddGoalAction()));
-        buttons.add(new JButton(new MarkCompletedAction()));
-        buttons.add(new JButton(new RemoveGoalAction()));
+        buttons.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
+        buttons.add(UiTheme.createPrimaryButton(new AddGoalAction()));
+        buttons.add(UiTheme.createTertiaryButton(new MarkCompletedAction()));
+        buttons.add(UiTheme.createSecondaryButton(new RemoveGoalAction()));
 
         JPanel south = new JPanel(new BorderLayout());
         south.setOpaque(false);

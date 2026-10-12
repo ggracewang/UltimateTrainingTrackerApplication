@@ -1,82 +1,205 @@
 package ui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.BorderLayout;
+import java.awt.GraphicsEnvironment;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.swing.Action;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
 
-// Holds the colours and fonts shared by every window, plus the few pieces of
-// furniture that more than one window needs to build (the dark header bar, a
-// styled table, a row of buttons).
+// Holds the colours, fonts, and shared furniture used by every window.
 //
-// Before this class existed the same colour values were typed out separately in
-// each window class, so changing the look of the app meant editing it in
-// several places and hoping they stayed in step.
+// The look is built from three colours: a deep blue for the big surfaces, a
+// bright lime for anything the eye should land on, and a pink kept for things
+// that actually mean something (goals completed, goals overdue) rather than
+// for decoration. Lime is never used as text on a light background, where it
+// is unreadable; it is always a fill with dark type on top of it.
+//
+// Keeping all of this in one class is what made the look changeable at all:
+// the colours used to be typed out separately in every window.
 @ExcludeFromJacocoGeneratedReport
 public final class UiTheme {
 
-    public static final Color HEADER_BG = new Color(44, 62, 80);
-    public static final Color PANEL_BG = new Color(248, 249, 252);
-    public static final Color BORDER = new Color(218, 220, 228);
-    public static final Color ROW_ALT = new Color(248, 249, 252);
-    public static final Color SUBTITLE_FG = new Color(143, 168, 188);
-    public static final Color LABEL_FG = new Color(70, 70, 70);
-    public static final Color MUTED_FG = new Color(120, 120, 120);
-    public static final Color SELECTION_BG = new Color(219, 234, 254);
+    // --- palette -----------------------------------------------------------
 
-    public static final Font TITLE_FONT = new Font("SansSerif", Font.BOLD, 20);
-    public static final Font SUBTITLE_FONT = new Font("SansSerif", Font.PLAIN, 12);
-    public static final Font SECTION_FONT = new Font("SansSerif", Font.BOLD, 13);
-    public static final Font BODY_FONT = new Font("SansSerif", Font.PLAIN, 13);
-    public static final Font SMALL_FONT = new Font("SansSerif", Font.PLAIN, 12);
+    /** The deep blue the banner and headings are painted in. */
+    public static final Color BASE = new Color(2, 29, 174);
 
-    private static final int ROW_HEIGHT = 26;
+    /** The bright lime used for the title, primary buttons, and selection. */
+    public static final Color LIME = new Color(181, 248, 0);
+
+    /** Kept for things that carry meaning: completed goals, overdue goals. */
+    public static final Color PINK = new Color(255, 45, 149);
+
+    /** Near-black blue used for body text and dark buttons. */
+    public static final Color INK = new Color(10, 16, 51);
+
+    public static final Color PAPER = Color.WHITE;
+    public static final Color PANEL_BG = new Color(246, 247, 242);
+    public static final Color BORDER = new Color(224, 226, 218);
+    public static final Color LABEL_FG = new Color(55, 60, 75);
+    public static final Color MUTED_FG = new Color(138, 143, 133);
+    public static final Color SELECTION_BG = LIME;
+    public static final Color ON_BASE_MUTED = new Color(255, 255, 255, 175);
+
+    // --- type --------------------------------------------------------------
+
+    // Impact is the condensed heavy face the design is built around. It ships
+    // with Windows and macOS; anywhere it is missing the next available name
+    // is used, so the app still runs rather than silently falling back to
+    // something unreadable.
+    private static final String HEAVY = firstAvailable(
+            "Impact", "Haettenschweiler", "Arial Black", "DejaVu Sans Bold", "SansSerif");
+    private static final String BODY = firstAvailable(
+            "Segoe UI", "Helvetica Neue", "SansSerif");
+
+    public static final Font DISPLAY_FONT = new Font(HEAVY, Font.PLAIN, 40);
+    public static final Font STAT_FONT = new Font(HEAVY, Font.PLAIN, 30);
+    public static final Font NUMBER_FONT = new Font(HEAVY, Font.PLAIN, 17);
+    public static final Font SECTION_FONT = new Font(BODY, Font.BOLD, 13);
+    public static final Font BODY_FONT = new Font(BODY, Font.PLAIN, 13);
+    public static final Font SMALL_FONT = new Font(BODY, Font.PLAIN, 12);
+    public static final Font TINY_BOLD_FONT = new Font(BODY, Font.BOLD, 10);
+    public static final Font BUTTON_FONT = new Font(BODY, Font.BOLD, 12);
+
+    private static final int ROW_HEIGHT = 36;
 
     // EFFECTS: prevents this utility class from being instantiated
     private UiTheme() {
     }
 
-    // EFFECTS: returns the dark header bar shown at the top of a window, with
-    //          the given title stacked above the given subtitle
-    public static JPanel createHeader(String title, String subtitle) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(HEADER_BG);
-        panel.setBorder(BorderFactory.createEmptyBorder(16, 22, 16, 22));
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(TITLE_FONT);
-        titleLabel.setForeground(Color.WHITE);
-
-        JLabel subtitleLabel = new JLabel(subtitle);
-        subtitleLabel.setFont(SUBTITLE_FONT);
-        subtitleLabel.setForeground(SUBTITLE_FG);
-
-        JPanel textStack = new JPanel();
-        textStack.setLayout(new BoxLayout(textStack, BoxLayout.Y_AXIS));
-        textStack.setOpaque(false);
-        textStack.add(titleLabel);
-        textStack.add(Box.createVerticalStrut(3));
-        textStack.add(subtitleLabel);
-
-        panel.add(textStack, BorderLayout.WEST);
-        return panel;
+    // EFFECTS: returns the first of the given font names that is installed on
+    //          this computer; returns the last one if none of the others are
+    private static String firstAvailable(String... names) {
+        Set<String> installed = new HashSet<>();
+        for (String name : GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getAvailableFontFamilyNames()) {
+            installed.add(name);
+        }
+        for (String name : names) {
+            if (installed.contains(name)) {
+                return name;
+            }
+        }
+        return names[names.length - 1];
     }
 
-    // EFFECTS: returns a styled, single-selection table showing the given model,
-    //          with alternating row colours and a light header row
+    // --- banner ------------------------------------------------------------
+
+    // EFFECTS: returns the deep blue banner across the top of a window, with
+    //          the title set large in lime above a quieter subtitle
+    public static JPanel createBanner(String title, String subtitle) {
+        JPanel banner = new JPanel(new BorderLayout());
+        banner.setBackground(BASE);
+        banner.setBorder(BorderFactory.createEmptyBorder(18, 26, 16, 26));
+        banner.add(createBannerText(title, subtitle), BorderLayout.WEST);
+        return banner;
+    }
+
+    // EFFECTS: returns the big lime title stacked above the subtitle
+    public static JPanel createBannerText(String title, String subtitle) {
+        JLabel titleLabel = new JLabel(title.toUpperCase());
+        titleLabel.setFont(DISPLAY_FONT);
+        titleLabel.setForeground(LIME);
+
+        JLabel subtitleLabel = new JLabel(subtitle.toUpperCase());
+        subtitleLabel.setFont(TINY_BOLD_FONT);
+        subtitleLabel.setForeground(ON_BASE_MUTED);
+
+        JPanel stack = new JPanel(new BorderLayout());
+        stack.setOpaque(false);
+        stack.add(titleLabel, BorderLayout.NORTH);
+        stack.add(subtitleLabel, BorderLayout.SOUTH);
+        return stack;
+    }
+
+    // EFFECTS: returns a big number above a small caption, for the strip of
+    //          figures that sits on the right-hand side of the banner
+    public static JPanel createStatTile(JLabel valueLabel, String caption, Color valueColour) {
+        valueLabel.setFont(STAT_FONT);
+        valueLabel.setForeground(valueColour);
+        valueLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+        JLabel captionLabel = new JLabel(caption.toUpperCase());
+        captionLabel.setFont(TINY_BOLD_FONT);
+        captionLabel.setForeground(ON_BASE_MUTED);
+
+        JPanel tile = new JPanel(new BorderLayout());
+        tile.setOpaque(false);
+        tile.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 20));
+        tile.add(valueLabel, BorderLayout.NORTH);
+        tile.add(captionLabel, BorderLayout.SOUTH);
+        return tile;
+    }
+
+    // --- buttons -----------------------------------------------------------
+
+    /** The main action on a screen: lime, with dark type. */
+    public static JButton createPrimaryButton(Action action) {
+        return createButton(action, LIME, INK, new Color(199, 255, 60));
+    }
+
+    /** A quieter action: pale, with dark type. */
+    public static JButton createSecondaryButton(Action action) {
+        return createButton(action, PANEL_BG, INK, new Color(234, 236, 228));
+    }
+
+    /** A third-rank action: dark, with lime type. */
+    public static JButton createTertiaryButton(Action action) {
+        return createButton(action, INK, LIME, new Color(24, 32, 78));
+    }
+
+    // EFFECTS: returns a flat square button running the given action, painted
+    //          in the given colours and lightening when the pointer is over it
+    private static JButton createButton(Action action, Color background,
+            Color foreground, Color hover) {
+        JButton button = new JButton(action);
+        button.setFont(BUTTON_FONT);
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setOpaque(true);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(11, 20, 11, 20));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(hover);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(background);
+            }
+        });
+        return button;
+    }
+
+    // --- tables ------------------------------------------------------------
+
+    // EFFECTS: returns a styled, single-selection table showing the given
+    //          model: roomy rows, no grid lines, a heavy rule under the column
+    //          headings, and a full-width lime bar on the selected row
     public static JTable createTable(DefaultTableModel model) {
         JTable table = new JTable(model);
         table.setRowHeight(ROW_HEIGHT);
@@ -85,25 +208,30 @@ public final class UiTheme {
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setSelectionBackground(SELECTION_BG);
-        table.setSelectionForeground(Color.DARK_GRAY);
+        table.setSelectionForeground(INK);
+        table.setBackground(PAPER);
         styleTableHeader(table);
         addRowRenderer(table);
         return table;
     }
 
     // MODIFIES: table
-    // EFFECTS: applies the shared font, background, and bottom border to the
-    //          column header row of the given table
+    // EFFECTS: styles the column heading row: small bold grey capitals over a
+    //          white background, with a dark rule beneath
     private static void styleTableHeader(JTable table) {
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        table.getTableHeader().setBackground(PANEL_BG);
-        table.getTableHeader().setForeground(new Color(90, 90, 90));
-        table.getTableHeader().setBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
+        JTableHeader header = table.getTableHeader();
+        header.setFont(TINY_BOLD_FONT);
+        header.setBackground(PAPER);
+        header.setForeground(MUTED_FG);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, INK));
+        header.setPreferredSize(new Dimension(0, 30));
+        header.setReorderingAllowed(false);
     }
 
     // MODIFIES: table
-    // EFFECTS: attaches a cell renderer that paints alternating row backgrounds
+    // EFFECTS: attaches a renderer that pads every cell, keeps unselected rows
+    //          plain white, and sets any numeric column in the heavy face so
+    //          the figures read as data rather than as words
     private static void addRowRenderer(JTable table) {
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
@@ -112,12 +240,35 @@ public final class UiTheme {
                     boolean hasFocus, int row, int col) {
                 Component c = super.getTableCellRendererComponent(
                         t, value, isSelected, hasFocus, row, col);
+                setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+                setFont(value instanceof Integer ? NUMBER_FONT : BODY_FONT);
                 if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : ROW_ALT);
+                    c.setBackground(PAPER);
+                    c.setForeground(value instanceof Integer ? INK : LABEL_FG);
                 }
                 return c;
             }
         });
+    }
+
+    // --- odds and ends -----------------------------------------------------
+
+    // EFFECTS: returns the small bold heading shown above a table
+    public static JLabel createSectionLabel(String text) {
+        JLabel label = new JLabel(text.toUpperCase());
+        label.setFont(SECTION_FONT);
+        label.setForeground(INK);
+        return label;
+    }
+
+    // EFFECTS: returns the empty grey line that sits under a table and gets
+    //          filled in with counts and totals
+    public static JLabel createSummaryLabel() {
+        JLabel label = new JLabel(" ");
+        label.setFont(SMALL_FONT);
+        label.setForeground(MUTED_FG);
+        label.setBorder(BorderFactory.createEmptyBorder(10, 2, 8, 0));
+        return label;
     }
 
     // EFFECTS: returns an empty panel styled as a bar for holding buttons,
@@ -129,23 +280,5 @@ public final class UiTheme {
                 BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)));
         return panel;
-    }
-
-    // EFFECTS: returns a bold heading label for naming a section of a window
-    public static JLabel createSectionLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(SECTION_FONT);
-        label.setForeground(LABEL_FG);
-        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
-        return label;
-    }
-
-    // EFFECTS: returns a small grey label used for summary lines under a table
-    public static JLabel createSummaryLabel() {
-        JLabel label = new JLabel();
-        label.setFont(SMALL_FONT);
-        label.setForeground(MUTED_FG);
-        label.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
-        return label;
     }
 }

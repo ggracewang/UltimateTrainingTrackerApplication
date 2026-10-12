@@ -15,7 +15,7 @@ import java.util.Map;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -95,7 +95,7 @@ class StatsWindow extends JFrame {
     private JPanel createNorth(SessionStats stats) {
         JPanel north = new JPanel();
         north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
-        north.add(UiTheme.createHeader("Minutes per Month",
+        north.add(UiTheme.createBanner("Minutes per Month",
                 "How much training each month added up to"));
         north.add(createTotalsBar(stats));
         return north;
@@ -153,7 +153,7 @@ class StatsWindow extends JFrame {
     // EFFECTS: returns the footer panel holding the close button
     private JPanel createFooter() {
         JPanel panel = UiTheme.createButtonBar();
-        panel.add(new JButton(new CloseAction()));
+        panel.add(UiTheme.createSecondaryButton(new CloseAction()));
         return panel;
     }
 

@@ -31,11 +31,11 @@ public class BarChartPanel extends JPanel {
     private static final int MARGIN_TOP    = 28;
     private static final int MARGIN_BOTTOM = 42;
 
-    private static final Color COLOUR_BAR      = new Color(41,  128, 185);
-    private static final Color COLOUR_BAR_DARK = new Color(28,  96,  145);
+    private static final Color COLOUR_BAR      = UiTheme.BASE;
+    private static final Color COLOUR_BAR_DARK = UiTheme.BASE;
     private static final Color COLOUR_AXIS     = new Color(110, 110, 110);
     private static final Color COLOUR_GRID     = new Color(232, 232, 232);
-    private static final Color COLOUR_LABEL    = new Color(70,  70,  70);
+    private static final Color COLOUR_LABEL    = UiTheme.INK;
 
     private List<String> labels;
     private List<Integer> values;

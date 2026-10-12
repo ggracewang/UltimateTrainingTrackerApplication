@@ -1,7 +1,7 @@
 package ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
+
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
@@ -12,7 +12,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
+
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -45,6 +45,7 @@ class SessionsPanel extends JPanel {
     private static final String[] COLUMNS = {"#", "Date", "Duration (min)", "Skills", "Notes"};
 
     private final TrackerDatabase database;
+    private final Runnable onDataChanged;
     private final DefaultTableModel tableModel;
     private final JTable table;
     private final JLabel summaryLabel;
@@ -56,17 +57,17 @@ class SessionsPanel extends JPanel {
 
     // REQUIRES: database != null
     // EFFECTS: builds the sessions tab and fills it from the given database
-    SessionsPanel(TrackerDatabase database) {
+    SessionsPanel(TrackerDatabase database, Runnable onDataChanged) {
         super(new BorderLayout());
         this.database = database;
+        this.onDataChanged = onDataChanged;
         this.sessions = new ArrayList<>();
         this.tableModel = createTableModel();
         this.table = UiTheme.createTable(tableModel);
         this.summaryLabel = UiTheme.createSummaryLabel();
 
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
-        add(UiTheme.createSectionLabel("Sessions"), BorderLayout.NORTH);
+        setBackground(UiTheme.PAPER);
+        setBorder(BorderFactory.createEmptyBorder(0, 26, 10, 26));
         add(createScrollPane(), BorderLayout.CENTER);
         add(createSouth(), BorderLayout.SOUTH);
         refresh();
@@ -85,6 +86,7 @@ class SessionsPanel extends JPanel {
             showDatabaseError("read your sessions from", e);
         }
         rebuildTable();
+        onDataChanged.run();
     }
 
     // MODIFIES: this
@@ -132,19 +134,20 @@ class SessionsPanel extends JPanel {
         table.getColumnModel().getColumn(0).setPreferredWidth(28);
         table.getColumnModel().getColumn(2).setPreferredWidth(100);
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(UiTheme.BORDER));
-        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setViewportBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(UiTheme.PAPER);
         return scrollPane;
     }
 
     // EFFECTS: returns the summary line and this tab's row of buttons, stacked
     private JPanel createSouth() {
-        JPanel buttons = new JPanel();
+        JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 0));
         buttons.setOpaque(false);
-        buttons.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
-        buttons.add(new JButton(new AddSessionAction()));
-        buttons.add(new JButton(new RemoveSessionAction()));
-        buttons.add(new JButton(new ViewStatsAction()));
+        buttons.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
+        buttons.add(UiTheme.createPrimaryButton(new AddSessionAction()));
+        buttons.add(UiTheme.createSecondaryButton(new RemoveSessionAction()));
+        buttons.add(UiTheme.createTertiaryButton(new ViewStatsAction()));
 
         JPanel south = new JPanel(new BorderLayout());
         south.setOpaque(false);
