@@ -31,6 +31,10 @@ public class BarChartPanel extends JPanel {
     private static final int MARGIN_TOP    = 28;
     private static final int MARGIN_BOTTOM = 42;
 
+    // bars stop widening past this, so a chart with one or two months shows
+    // two sensible bars rather than one slab across the whole panel
+    private static final int MAX_BAR_WIDTH = 90;
+
     private static final Color COLOUR_BAR      = UiTheme.BASE;
     private static final Color COLOUR_BAR_DARK = UiTheme.BASE;
     private static final Color COLOUR_AXIS     = new Color(110, 110, 110);
@@ -146,7 +150,7 @@ public class BarChartPanel extends JPanel {
     private void drawBars(Graphics2D g2, int chartW, int chartH, int maxValue) {
         int n    = values.size();
         int gap  = 6;
-        int barW = Math.max(2, (chartW - gap * (n + 1)) / n);
+        int barW = Math.min(MAX_BAR_WIDTH, Math.max(2, (chartW - gap * (n + 1)) / n));
 
         for (int i = 0; i < n; i++) {
             int value = values.get(i);

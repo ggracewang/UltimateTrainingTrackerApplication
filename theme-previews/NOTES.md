@@ -1,53 +1,71 @@
-# GUI redesign
+# Interface design
 
-**Built.** The palette and layout below are what the app now uses. The mock-ups
-are kept as a record of how the look was arrived at.
+**Built.** The palette, layout and type below are what the app uses. The
+mock-ups are kept as a record of how it was arrived at.
 
-## Palette — in use
+## Palette
 
 | Role | Hex | Where |
 |---|---|---|
-| Base | `#021DAE` | banner, chart bars |
-| Accent | `#B5F800` | title, primary buttons, selected row, selected tab text |
-| Pizzazz | `#FF2D95` | goals-completed counter only — pink is reserved for things that mean something |
-| Ink | `#0A1033` | body text, dark buttons, selected tab |
-| Paper | `#FFFFFF` | tables |
+| Base | `#021DAE` | nav column, chart bars |
+| Accent | `#B5F800` | title, selected nav item, primary buttons, selected row |
+| Pizzazz | `#FF2D95` | goals-completed figure, Exit on hover |
+| Ink | `#0A1033` | body text, dark buttons, page headings |
+| Paper | `#FFFFFF` | pages and tables |
 
-All of it lives in `UiTheme`. `#012AD6` ("B-" on the ladder) is one step
-brighter and still a reasonable alternative — changing `UiTheme.BASE` is the
-whole job. Compare them again in `BLUE-ladder.png`.
+All of it is in `UiTheme`. `#012AD6` is one step brighter and still a
+reasonable alternative; changing `UiTheme.BASE` is the whole job. Compare them
+in `BLUE-ladder.png`.
 
-## Type
+## Layout
 
-- Headings and figures: **Impact**. `UiTheme` checks what is installed and
-  falls back Impact → Haettenschweiler → Arial Black → DejaVu Sans Bold →
-  SansSerif, so the app still runs where Impact is missing (most Linux).
-- Body and labels: Segoe UI.
+A blue column down the left holds the title, the three pages, and the way out.
+It is labels over a `CardLayout`, not a `JTabbedPane`: a tabbed pane is drawn
+by the operating system and ignores the theme, and a side column lets the blue
+be a block of colour rather than a stripe.
 
-## What was built
+- **Home** is one quote filling the page, with the running totals in the top
+  right corner
+- **Sessions** is the table, then the monthly chart and totals, then buttons
+- **Goals** is the table, the completed-only filter, then buttons
 
-- full-bleed blue banner, oversized Impact title, three live totals on the
-  right that refresh whenever either tab changes something
-- flat tabs over a `CardLayout`, replacing `JTabbedPane`, which is drawn by the
-  operating system and ignored the theme entirely
-- buttons in three ranks: lime primary, pale secondary, dark tertiary, each
-  lightening on hover
-- 36px table rows, no grid lines, a heavy rule under the headings, a lime
-  selection bar, and numeric columns set in Impact
-- section headings dropped, because the tab above already names the screen
+There is no separate stats window any more; the chart lives on the Sessions
+page.
+
+## The home screen
+
+The quote, the two colours and the typeface are all picked fresh each time the
+app opens, so it reads as a different poster every launch.
+
+The colour pairings are a chosen list in `UiTheme`, not any two of the palette
+at random: lime on white and white on lime disappear, pink on blue vibrates,
+blue on ink is mud. Twelve pairings that work give the variety without the
+days where the quote cannot be read.
+
+Faces rotate between Impact, Arial Black, Haettenschweiler and Franklin Gothic
+Heavy, each falling back to whatever is installed. The totals take the quote's
+own foreground colour so the page stays two colours however it was painted.
+
+The quotes themselves are a constant list in `model/Quote.java` — they ship
+with the app like the palette does, so there is no table to seed and no way to
+end up with none. Tests cover that none are blank, duplicated, or too long to
+set at 64pt.
 
 ## Known limits
 
-- the native title bar cannot be themed without drawing custom window chrome,
-  including drag and resize; not worth it
-- no rounded corners or shadows in Swing without hand-painting every component,
-  which suits the flat poster look anyway
+- the native title bar cannot be themed without drawing custom window chrome
+- no rounded corners or shadows in Swing without hand-painting every component
+- the nav is 210px of 1000, about a fifth, permanently; narrow it if the Notes
+  column feels tight
+- the chart sits in empty space until there are a few months of sessions
 
 ## The images
 
 | File | What it is |
 |---|---|
-| `AFTER-sessions.png`, `AFTER-goals.png` | the app as built |
-| `REDESIGN-blue.png`, `REDESIGN-navy.png` | the mock-ups this was built from |
+| `AFTER-home-blue.png`, `AFTER-home-white.png` | the home screen on two consecutive launches |
+| `AFTER-sessions.png`, `AFTER-goals.png` | the two log pages as built |
+| `MOCKUP-quote-*.png`, `MOCKUP-sessions.png` | the mock-ups this was built from |
 | `BLUE-ladder.png` | five blues from navy to electric, for settling the shade |
-| `A-night-field.png`, `B-electric.png`, `C-sunlight.png` | early colour-only swaps on the old layout |
+| `REDESIGN-blue.png`, `REDESIGN-navy.png` | the earlier top-banner layout, before the side nav |
+| `A-night-field.png`, `B-electric.png`, `C-sunlight.png` | the first colour-only swaps on the original layout |

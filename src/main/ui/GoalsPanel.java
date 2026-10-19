@@ -73,7 +73,7 @@ class GoalsPanel extends JPanel {
         this.summaryLabel = UiTheme.createSummaryLabel();
 
         setBackground(UiTheme.PAPER);
-        setBorder(BorderFactory.createEmptyBorder(0, 26, 10, 26));
+        setBorder(BorderFactory.createEmptyBorder(26, 26, 14, 26));
         add(createNorth(), BorderLayout.NORTH);
         add(createScrollPane(), BorderLayout.CENTER);
         add(createSouth(), BorderLayout.SOUTH);
@@ -178,6 +178,7 @@ class GoalsPanel extends JPanel {
         JPanel north = new JPanel(new BorderLayout());
         north.setOpaque(false);
         north.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
+        north.add(UiTheme.createPageHeading("Goals"), BorderLayout.WEST);
         north.add(completedOnlyBox, BorderLayout.EAST);
         return north;
     }

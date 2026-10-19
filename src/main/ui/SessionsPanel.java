@@ -7,8 +7,10 @@ import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -43,12 +45,14 @@ import persistence.TrackerDatabase;
 class SessionsPanel extends JPanel {
 
     private static final String[] COLUMNS = {"#", "Date", "Duration (min)", "Skills", "Notes"};
+    private static final int CHART_HEIGHT = 120;
 
     private final TrackerDatabase database;
     private final Runnable onDataChanged;
     private final DefaultTableModel tableModel;
     private final JTable table;
     private final JLabel summaryLabel;
+    private final BarChartPanel chart = new BarChartPanel();
 
     // the sessions currently shown in the table; row N of the table is element
     // N of this list, which is how a selected row is turned back into the id
@@ -67,7 +71,8 @@ class SessionsPanel extends JPanel {
         this.summaryLabel = UiTheme.createSummaryLabel();
 
         setBackground(UiTheme.PAPER);
-        setBorder(BorderFactory.createEmptyBorder(0, 26, 10, 26));
+        setBorder(BorderFactory.createEmptyBorder(26, 26, 14, 26));
+        add(UiTheme.createPageHeading("Sessions"), BorderLayout.NORTH);
         add(createScrollPane(), BorderLayout.CENTER);
         add(createSouth(), BorderLayout.SOUTH);
         refresh();
@@ -86,6 +91,7 @@ class SessionsPanel extends JPanel {
             showDatabaseError("read your sessions from", e);
         }
         rebuildTable();
+        updateChart();
         onDataChanged.run();
     }
 
@@ -140,20 +146,67 @@ class SessionsPanel extends JPanel {
         return scrollPane;
     }
 
-    // EFFECTS: returns the summary line and this tab's row of buttons, stacked
+    // EFFECTS: returns everything below the table: the chart of monthly
+    //          minutes with the totals beside its heading, then the buttons
     private JPanel createSouth() {
         JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 0));
         buttons.setOpaque(false);
-        buttons.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
+        buttons.setBorder(BorderFactory.createEmptyBorder(14, 0, 0, 0));
         buttons.add(UiTheme.createPrimaryButton(new AddSessionAction()));
         buttons.add(UiTheme.createSecondaryButton(new RemoveSessionAction()));
-        buttons.add(UiTheme.createTertiaryButton(new ViewStatsAction()));
 
         JPanel south = new JPanel(new BorderLayout());
         south.setOpaque(false);
-        south.add(summaryLabel, BorderLayout.NORTH);
+        south.add(createChartBlock(), BorderLayout.NORTH);
         south.add(buttons, BorderLayout.SOUTH);
         return south;
+    }
+
+    // EFFECTS: returns the chart of minutes per month, with its heading on the
+    //          left and the summary figures on the right above it
+    private JPanel createChartBlock() {
+        JLabel heading = new JLabel("MINUTES PER MONTH");
+        heading.setFont(UiTheme.TINY_BOLD_FONT);
+        heading.setForeground(UiTheme.MUTED_FG);
+
+        JPanel headingRow = new JPanel(new BorderLayout());
+        headingRow.setOpaque(false);
+        headingRow.setBorder(BorderFactory.createEmptyBorder(16, 0, 8, 0));
+        headingRow.add(heading, BorderLayout.WEST);
+        headingRow.add(summaryLabel, BorderLayout.EAST);
+
+        chart.setTitles("", "", "Add a session to see your months here");
+        chart.setPreferredSize(new java.awt.Dimension(0, CHART_HEIGHT));
+
+        JPanel block = new JPanel(new BorderLayout());
+        block.setOpaque(false);
+        block.add(headingRow, BorderLayout.NORTH);
+        block.add(chart, BorderLayout.CENTER);
+        return block;
+    }
+
+    // MODIFIES: this
+    // EFFECTS: redraws the chart from the minutes practised in each month
+    private void updateChart() {
+        try {
+            Map<String, Integer> byMonth = database.getMinutesByMonth();
+            chart.setData(monthLabels(byMonth), new ArrayList<>(byMonth.values()));
+        } catch (SQLException e) {
+            chart.setData(new ArrayList<>(), new ArrayList<>());
+        }
+        chart.repaint();
+    }
+
+    // REQUIRES: byMonth is keyed by month in "YYYY-MM" form
+    // EFFECTS: returns the months as short labels for under the bars,
+    //          e.g. "2026-05" becomes "May"
+    private List<String> monthLabels(Map<String, Integer> byMonth) {
+        List<String> labels = new ArrayList<>();
+        for (String key : byMonth.keySet()) {
+            String name = YearMonth.parse(key).getMonth().toString(); // e.g. "MAY"
+            labels.add(name.charAt(0) + name.substring(1, 3).toLowerCase());
+        }
+        return labels;
     }
 
     // EFFECTS: shows the given message to the user as an error dialog
@@ -306,27 +359,4 @@ class SessionsPanel extends JPanel {
         }
     }
 
-    /**
-     * Represents the action taken when the user wants to see the bar chart of
-     * their session durations in a separate window.
-     */
-    private class ViewStatsAction extends AbstractAction {
-
-        ViewStatsAction() {
-            super("View Stats");
-        }
-
-        // EFFECTS: opens the stats window, or tells the user there is nothing to
-        //          chart yet if no sessions have been logged
-        @Override
-        public void actionPerformed(ActionEvent evt) {
-            if (sessions.isEmpty()) {
-                JOptionPane.showMessageDialog(SessionsPanel.this,
-                        "No sessions yet. Add some sessions first.",
-                        "No Data", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            new StatsWindow(database);
-        }
-    }
 }

@@ -3,17 +3,16 @@ package ui;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Cursor;
-import java.awt.FlowLayout;
+import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -23,41 +22,41 @@ import javax.swing.WindowConstants;
 import ca.ubc.cs.ExcludeFromJacocoGeneratedReport;
 import model.Event;
 import model.EventLog;
-import persistence.SessionStats;
 import persistence.TrackerDatabase;
 
 // Referenced from AlarmSystem demo
 
-// Represents the main application window: a deep blue banner carrying the
-// title and three running totals, a row of flat tabs beneath it, and whichever
-// tab is showing.
+// Represents the main application window: a blue column down the left holding
+// the title and the three pages, and whichever page is showing filling the
+// rest.
 //
-// The tabs are plain labels over a CardLayout rather than a JTabbedPane,
-// because a JTabbedPane is drawn by the operating system and ignores the
-// theme, which left a grey strip across an otherwise blue and lime window.
+// The nav is a column of labels over a CardLayout rather than a JTabbedPane.
+// A JTabbedPane is drawn by the operating system and ignores the theme, and a
+// side column gives the blue somewhere to be a block of colour rather than a
+// stripe, which is the look the app is after.
 //
-// Both tabs write to the database the moment anything changes, so there is no
-// Save button and no save prompt on the way out: there is never unsaved work.
+// Every page writes to the database the moment anything changes, so there is
+// no Save button and no save prompt on the way out.
 @ExcludeFromJacocoGeneratedReport
 public class TrainingTrackerGUI extends JFrame {
 
-    private static final int WIDTH = 980;
+    private static final int WIDTH = 1000;
     private static final int HEIGHT = 680;
+    private static final int NAV_WIDTH = 210;
+
+    private static final String HOME = "Home";
     private static final String SESSIONS = "Sessions";
     private static final String GOALS = "Goals";
+    private static final String[] PAGES = {HOME, SESSIONS, GOALS};
 
     private final TrackerDatabase database;
+    private final HomePanel homePanel;
     private final SessionsPanel sessionsPanel;
     private final GoalsPanel goalsPanel;
 
-    private final JLabel hoursValue = new JLabel("0");
-    private final JLabel sessionsValue = new JLabel("0");
-    private final JLabel goalsValue = new JLabel("0");
-
     private final CardLayout cards = new CardLayout();
     private final JPanel cardHolder = new JPanel(cards);
-    private final JLabel sessionsTab = createTab(SESSIONS);
-    private final JLabel goalsTab = createTab(GOALS);
+    private final JLabel[] navItems = new JLabel[PAGES.length];
 
     // EFFECTS: opens the database, then builds and shows the window. Quits with
     //          an explanation if the database cannot be opened, because without
@@ -66,11 +65,11 @@ public class TrainingTrackerGUI extends JFrame {
         super("Ultimate Training Tracker");
 
         database = openDatabaseOrQuit();
-        sessionsPanel = new SessionsPanel(database, this::refreshTotals);
-        goalsPanel = new GoalsPanel(database, this::refreshTotals);
+        homePanel = new HomePanel(database);
+        sessionsPanel = new SessionsPanel(database, homePanel::refresh);
+        goalsPanel = new GoalsPanel(database, homePanel::refresh);
 
         buildWindow();
-        refreshTotals();
     }
 
     // EFFECTS: returns a connection to the application database, or shows an
@@ -89,21 +88,19 @@ public class TrainingTrackerGUI extends JFrame {
 
     // MODIFIES: this
     // EFFECTS: lays out the window, centres it on screen, shows it, and makes
-    //          the window's X button shut down the same way the Exit button does
+    //          the window's X button shut the app down tidily
     private void buildWindow() {
         setSize(WIDTH, HEIGHT);
         setLayout(new BorderLayout());
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        getContentPane().setBackground(UiTheme.PAPER);
 
-        cardHolder.setBackground(UiTheme.PAPER);
+        cardHolder.add(homePanel, HOME);
         cardHolder.add(sessionsPanel, SESSIONS);
         cardHolder.add(goalsPanel, GOALS);
 
-        add(createBanner(), BorderLayout.NORTH);
-        add(createBody(), BorderLayout.CENTER);
-        add(createBottomBar(), BorderLayout.SOUTH);
-        showTab(SESSIONS);
+        add(createNav(), BorderLayout.WEST);
+        add(cardHolder, BorderLayout.CENTER);
+        showPage(HOME);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -116,90 +113,111 @@ public class TrainingTrackerGUI extends JFrame {
         setVisible(true);
     }
 
-    // EFFECTS: returns the blue banner: the title on the left, the three
-    //          running totals on the right
-    private JPanel createBanner() {
-        JPanel totals = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        totals.setOpaque(false);
-        totals.add(UiTheme.createStatTile(hoursValue, "hours", UiTheme.LIME));
-        totals.add(UiTheme.createStatTile(sessionsValue, "sessions", UiTheme.LIME));
-        totals.add(UiTheme.createStatTile(goalsValue, "goals done", UiTheme.PINK));
+    // EFFECTS: returns the blue column: the title at the top, the three pages
+    //          below it, and the way out at the bottom
+    private JPanel createNav() {
+        JPanel nav = new JPanel(new BorderLayout());
+        nav.setBackground(UiTheme.BASE);
+        nav.setPreferredSize(new Dimension(NAV_WIDTH, 0));
+        nav.setBorder(BorderFactory.createCompoundBorder(
+                // keeps the column distinct on the days the quote behind it
+                // happens to be painted the same blue
+                BorderFactory.createMatteBorder(0, 0, 0, 2, UiTheme.NAV_EDGE),
+                BorderFactory.createEmptyBorder(26, 0, 22, 0)));
 
-        JPanel banner = UiTheme.createBanner("Training Tracker",
-                "ultimate  -  train  -  track  -  improve");
-        banner.add(totals, BorderLayout.EAST);
-        return banner;
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
+        top.add(createTitle(), BorderLayout.NORTH);
+        top.add(createNavItems(), BorderLayout.CENTER);
+
+        nav.add(top, BorderLayout.NORTH);
+        nav.add(createExit(), BorderLayout.SOUTH);
+        return nav;
     }
 
-    // EFFECTS: returns the tab strip with whichever tab is showing beneath it
-    private JPanel createBody() {
-        JPanel tabs = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        tabs.setBackground(UiTheme.PAPER);
-        tabs.setBorder(BorderFactory.createEmptyBorder(18, 26, 12, 26));
-        tabs.add(sessionsTab);
-        tabs.add(goalsTab);
+    // EFFECTS: returns the app name, stacked onto two lines so it can be set
+    //          large in the narrow column
+    private JPanel createTitle() {
+        JPanel title = new JPanel();
+        title.setLayout(new BoxLayout(title, BoxLayout.Y_AXIS));
+        title.setOpaque(false);
+        title.setBorder(BorderFactory.createEmptyBorder(0, 0, 22, 0));
 
-        JPanel body = new JPanel(new BorderLayout());
-        body.setBackground(UiTheme.PAPER);
-        body.add(tabs, BorderLayout.NORTH);
-        body.add(cardHolder, BorderLayout.CENTER);
-        return body;
+        for (String line : new String[]{"TRAINING", "TRACKER"}) {
+            JLabel label = new JLabel(line);
+            label.setFont(UiTheme.DISPLAY_FONT.deriveFont(34f));
+            label.setForeground(UiTheme.LIME);
+            label.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+            title.add(label);
+        }
+        return title;
     }
 
-    // EFFECTS: returns one clickable tab label showing the given name
-    private JLabel createTab(String name) {
-        JLabel tab = new JLabel(name.toUpperCase());
-        tab.setFont(UiTheme.SECTION_FONT);
-        tab.setOpaque(true);
-        tab.setBorder(BorderFactory.createEmptyBorder(11, 24, 11, 24));
-        tab.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        tab.addMouseListener(new MouseAdapter() {
+    // EFFECTS: returns the stack of clickable page names
+    private JPanel createNavItems() {
+        JPanel items = new JPanel();
+        items.setLayout(new BoxLayout(items, BoxLayout.Y_AXIS));
+        items.setOpaque(false);
+        for (int i = 0; i < PAGES.length; i++) {
+            navItems[i] = createNavItem(PAGES[i]);
+            items.add(navItems[i]);
+        }
+        return items;
+    }
+
+    // EFFECTS: returns one clickable entry in the nav column
+    private JLabel createNavItem(String page) {
+        JLabel item = new JLabel(page.toUpperCase());
+        item.setFont(UiTheme.SECTION_FONT);
+        item.setOpaque(true);
+        item.setBorder(BorderFactory.createEmptyBorder(13, 20, 13, 20));
+        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        item.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        item.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                showTab(name);
+                showPage(page);
             }
         });
-        return tab;
+        return item;
+    }
+
+    // EFFECTS: returns the way out, sitting apart from the pages at the bottom
+    private JLabel createExit() {
+        JLabel exit = new JLabel("EXIT");
+        exit.setFont(UiTheme.SECTION_FONT);
+        exit.setForeground(UiTheme.ON_BASE_MUTED);
+        exit.setBorder(BorderFactory.createEmptyBorder(13, 20, 0, 20));
+        exit.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        exit.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                shutDown();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                exit.setForeground(UiTheme.PINK);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                exit.setForeground(UiTheme.ON_BASE_MUTED);
+            }
+        });
+        return exit;
     }
 
     // MODIFIES: this
-    // EFFECTS: brings the named tab to the front and repaints both tab labels
-    //          so the one showing is the dark one
-    private void showTab(String name) {
-        cards.show(cardHolder, name);
-        paintTab(sessionsTab, SESSIONS.equals(name));
-        paintTab(goalsTab, GOALS.equals(name));
-    }
-
-    // MODIFIES: tab
-    // EFFECTS: paints the given tab as the selected one or as a quiet one
-    private void paintTab(JLabel tab, boolean selected) {
-        tab.setBackground(selected ? UiTheme.INK : UiTheme.PANEL_BG);
-        tab.setForeground(selected ? UiTheme.LIME : UiTheme.MUTED_FG);
-    }
-
-    // MODIFIES: this
-    // EFFECTS: re-reads the three banner totals from the database. Called once
-    //          at startup and again by either tab whenever it changes
-    //          something, so the figures on the banner cannot go stale.
-    private void refreshTotals() {
-        try {
-            SessionStats stats = database.getSessionStats();
-            hoursValue.setText(String.format("%.1f", stats.getTotalHours()));
-            sessionsValue.setText(String.valueOf(stats.getSessionCount()));
-            goalsValue.setText(String.valueOf(database.getCompletedGoals().size()));
-        } catch (SQLException e) {
-            hoursValue.setText("--");
-            sessionsValue.setText("--");
-            goalsValue.setText("--");
+    // EFFECTS: brings the named page to the front and repaints the nav so the
+    //          page being shown is the highlighted one
+    private void showPage(String page) {
+        cards.show(cardHolder, page);
+        for (int i = 0; i < PAGES.length; i++) {
+            boolean selected = PAGES[i].equals(page);
+            navItems[i].setBackground(selected ? UiTheme.LIME : UiTheme.BASE);
+            navItems[i].setForeground(selected ? UiTheme.INK : UiTheme.ON_BASE_MUTED);
         }
-    }
-
-    // EFFECTS: returns the bar along the bottom of the window
-    private JPanel createBottomBar() {
-        JPanel panel = UiTheme.createButtonBar();
-        panel.add(UiTheme.createSecondaryButton(new ExitAction()));
-        return panel;
     }
 
     // MODIFIES: this
@@ -236,22 +254,6 @@ public class TrainingTrackerGUI extends JFrame {
         for (Event e : el) {
             System.out.println(e.toString());
             System.out.println();
-        }
-    }
-
-    /**
-     * Represents the action taken when the user wants to close the app.
-     */
-    private class ExitAction extends AbstractAction {
-
-        ExitAction() {
-            super("Exit");
-        }
-
-        // EFFECTS: shuts the app down the same way the window's X button does
-        @Override
-        public void actionPerformed(ActionEvent evt) {
-            shutDown();
         }
     }
 }

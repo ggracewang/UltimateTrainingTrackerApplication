@@ -10,6 +10,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import javax.swing.Action;
@@ -61,6 +62,9 @@ public final class UiTheme {
     public static final Color SELECTION_BG = LIME;
     public static final Color ON_BASE_MUTED = new Color(255, 255, 255, 175);
 
+    /** A darker blue edging the nav column, so it stays distinct whatever is beside it. */
+    public static final Color NAV_EDGE = new Color(1, 18, 120);
+
     // --- type --------------------------------------------------------------
 
     // Impact is the condensed heavy face the design is built around. It ships
@@ -82,6 +86,76 @@ public final class UiTheme {
     public static final Font BUTTON_FONT = new Font(BODY, Font.BOLD, 12);
 
     private static final int ROW_HEIGHT = 36;
+
+    // --- the home screen's rotating poster ---------------------------------
+
+    // Background and foreground pairings for the quote on the home screen,
+    // one picked at random each time the app opens.
+    //
+    // These are a chosen list rather than any two of the palette taken at
+    // random, because several combinations are unusable: lime on white and
+    // white on lime both disappear, pink on blue vibrates, and blue on ink is
+    // mud. Picking from pairs that work gives the variety without the days
+    // where the quote cannot be read.
+    private static final Color[][] QUOTE_PAIRS = {
+        {BASE, LIME}, {LIME, BASE}, {PINK, LIME}, {INK, LIME},
+        {INK, PINK}, {PAPER, BASE}, {BASE, PAPER}, {LIME, INK},
+        {PINK, PAPER}, {PAPER, INK}, {INK, PAPER}, {PINK, INK},
+    };
+
+    // The faces the quote is set in, one picked at random alongside the
+    // colours. Changing the typeface as well as the colours makes each
+    // opening read as a different poster rather than a recolour of one.
+    private static final String[] QUOTE_FACES = {
+        firstAvailable("Impact", "DejaVu Sans Bold", "SansSerif"),
+        firstAvailable("Arial Black", "DejaVu Sans Bold", "SansSerif"),
+        firstAvailable("Haettenschweiler", "Impact", "SansSerif"),
+        firstAvailable("Franklin Gothic Heavy", "Arial Black", "SansSerif"),
+    };
+
+    private static final Random RANDOM = new Random();
+
+    /**
+     * Represents one way of painting the home screen's quote: a background, a
+     * foreground, and a typeface, chosen together so they are known to work.
+     */
+    public static final class QuoteStyle {
+        private final Color background;
+        private final Color foreground;
+        private final String face;
+
+        private QuoteStyle(Color background, Color foreground, String face) {
+            this.background = background;
+            this.foreground = foreground;
+            this.face = face;
+        }
+
+        public Color getBackground() {
+            return background;
+        }
+
+        public Color getForeground() {
+            return foreground;
+        }
+
+        // EFFECTS: returns the quote's own typeface at the given size
+        public Font font(int size) {
+            return new Font(face, Font.PLAIN, size);
+        }
+    }
+
+    // EFFECTS: returns a random colour pairing and typeface for the quote
+    public static QuoteStyle randomQuoteStyle() {
+        Color[] pair = QUOTE_PAIRS[RANDOM.nextInt(QUOTE_PAIRS.length)];
+        return new QuoteStyle(pair[0], pair[1], QUOTE_FACES[RANDOM.nextInt(QUOTE_FACES.length)]);
+    }
+
+    // REQUIRES: 0 <= alpha <= 255
+    // EFFECTS: returns the given colour at the given opacity, for text that
+    //          should sit quietly against whichever background was picked
+    public static Color fade(Color colour, int alpha) {
+        return new Color(colour.getRed(), colour.getGreen(), colour.getBlue(), alpha);
+    }
 
     // EFFECTS: prevents this utility class from being instantiated
     private UiTheme() {
@@ -252,6 +326,15 @@ public final class UiTheme {
     }
 
     // --- odds and ends -----------------------------------------------------
+
+    // EFFECTS: returns the large heading naming a page
+    public static JLabel createPageHeading(String text) {
+        JLabel label = new JLabel(text.toUpperCase());
+        label.setFont(DISPLAY_FONT.deriveFont(30f));
+        label.setForeground(INK);
+        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 0));
+        return label;
+    }
 
     // EFFECTS: returns the small bold heading shown above a table
     public static JLabel createSectionLabel(String text) {
