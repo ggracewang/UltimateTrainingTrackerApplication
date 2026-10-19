@@ -34,22 +34,33 @@ page.
 
 ## The home screen
 
-The quote, the two colours and the typeface are all picked fresh each time the
-app opens, so it reads as a different poster every launch.
+The quote and the two colours are picked fresh each time the app opens. The
+typeface and the letter spacing do not vary: every saying is set the same way
+and every fact is set the same way, so only the colour tells one opening from
+the next. Rotating the face as well made the same screen look like a different
+app each launch, because Impact is ultra-condensed and Arial Black is wide.
 
-The colour pairings are a chosen list in `UiTheme`, not any two of the palette
-at random: lime on white and white on lime disappear, pink on blue vibrates,
-blue on ink is mud. Twelve pairings that work give the variety without the
-days where the quote cannot be read.
+Six colour pairings, all of them deliberate:
 
-Faces rotate between Impact, Arial Black, Haettenschweiler and Franklin Gothic
-Heavy, each falling back to whatever is installed. The totals take the quote's
-own foreground colour so the page stays two colours however it was painted.
+| Ground | Type |
+|---|---|
+| pink | lime |
+| lime | pink |
+| blue | lime |
+| lime | blue |
+| blue | white |
+| lime | near-black |
 
-The quotes themselves are a constant list in `model/Quote.java` — they ship
-with the app like the palette does, so there is no table to seed and no way to
-end up with none. Tests cover that none are blank, duplicated, or too long to
-set at 64pt.
+Sayings are shouted in capitals at 64pt and tracked slightly tight, the way
+condensed display type is meant to be set. Facts are left in sentence case at
+46pt at natural spacing, because shouting a date or a measurement reads as odd
+rather than emphatic, and a fact runs longer so it needs the smaller size.
+
+The quotes themselves are a constant list in `model/Quote.java`, built with
+`Quote.saying(...)` or `Quote.fact(...)` so which kind it is lives with the
+line. They ship with the app like the palette does, so there is no table to
+seed and no way to end up with none. Tests cover that none are blank,
+duplicated, or too long to set, and that the list holds some of each kind.
 
 ## Known limits
 
@@ -63,7 +74,7 @@ set at 64pt.
 
 | File | What it is |
 |---|---|
-| `AFTER-home-blue.png`, `AFTER-home-white.png` | the home screen on two consecutive launches |
+| `AFTER-home-*.png` | the home screen in several of its colour pairings, and with a fact rather than a saying |
 | `AFTER-sessions.png`, `AFTER-goals.png` | the two log pages as built |
 | `MOCKUP-quote-*.png`, `MOCKUP-sessions.png` | the mock-ups this was built from |
 | `BLUE-ladder.png` | five blues from navy to electric, for settling the shade |

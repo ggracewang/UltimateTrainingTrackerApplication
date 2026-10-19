@@ -9,7 +9,10 @@ import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.font.TextAttribute;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -90,44 +93,37 @@ public final class UiTheme {
     // --- the home screen's rotating poster ---------------------------------
 
     // Background and foreground pairings for the quote on the home screen,
-    // one picked at random each time the app opens.
-    //
-    // These are a chosen list rather than any two of the palette taken at
-    // random, because several combinations are unusable: lime on white and
-    // white on lime both disappear, pink on blue vibrates, and blue on ink is
-    // mud. Picking from pairs that work gives the variety without the days
-    // where the quote cannot be read.
+    // one picked at random each time the app opens. Only the colour changes:
+    // the typeface and the letter spacing are fixed, so every quote is set
+    // the same way and only the colour tells one opening from the next.
     private static final Color[][] QUOTE_PAIRS = {
-        {BASE, LIME}, {LIME, BASE}, {PINK, LIME}, {INK, LIME},
-        {INK, PINK}, {PAPER, BASE}, {BASE, PAPER}, {LIME, INK},
-        {PINK, PAPER}, {PAPER, INK}, {INK, PAPER}, {PINK, INK},
-    };
-
-    // The faces the quote is set in, one picked at random alongside the
-    // colours. Changing the typeface as well as the colours makes each
-    // opening read as a different poster rather than a recolour of one.
-    private static final String[] QUOTE_FACES = {
-        firstAvailable("Impact", "DejaVu Sans Bold", "SansSerif"),
-        firstAvailable("Arial Black", "DejaVu Sans Bold", "SansSerif"),
-        firstAvailable("Haettenschweiler", "Impact", "SansSerif"),
-        firstAvailable("Franklin Gothic Heavy", "Arial Black", "SansSerif"),
+        {PINK, LIME},   // pink ground, lime type
+        {LIME, PINK},   // and the other way round
+        {BASE, LIME},   // blue ground, lime type
+        {LIME, BASE},   // and the other way round
+        {BASE, PAPER},  // blue ground, white type
+        {LIME, INK},    // lime ground, near-black type
     };
 
     private static final Random RANDOM = new Random();
 
+    // Sayings are set tight, the way condensed display type is meant to be.
+    // Facts are left at their natural spacing, because they are read as a
+    // sentence rather than taken in as a shape.
+    private static final float SAYING_TRACKING = -0.02f;
+    private static final float FACT_TRACKING = 0f;
+
     /**
-     * Represents one way of painting the home screen's quote: a background, a
-     * foreground, and a typeface, chosen together so they are known to work.
+     * Represents one way of painting the home screen's quote. Only the two
+     * colours vary; the type is the same every time.
      */
     public static final class QuoteStyle {
         private final Color background;
         private final Color foreground;
-        private final String face;
 
-        private QuoteStyle(Color background, Color foreground, String face) {
+        private QuoteStyle(Color background, Color foreground) {
             this.background = background;
             this.foreground = foreground;
-            this.face = face;
         }
 
         public Color getBackground() {
@@ -137,17 +133,31 @@ public final class UiTheme {
         public Color getForeground() {
             return foreground;
         }
-
-        // EFFECTS: returns the quote's own typeface at the given size
-        public Font font(int size) {
-            return new Font(face, Font.PLAIN, size);
-        }
     }
 
-    // EFFECTS: returns a random colour pairing and typeface for the quote
+    // EFFECTS: returns a random colour pairing for the quote
     public static QuoteStyle randomQuoteStyle() {
         Color[] pair = QUOTE_PAIRS[RANDOM.nextInt(QUOTE_PAIRS.length)];
-        return new QuoteStyle(pair[0], pair[1], QUOTE_FACES[RANDOM.nextInt(QUOTE_FACES.length)]);
+        return new QuoteStyle(pair[0], pair[1]);
+    }
+
+    // EFFECTS: returns the one face every saying is set in, at the given size
+    public static Font sayingFont(int size) {
+        return tracked(new Font(HEAVY, Font.PLAIN, size), SAYING_TRACKING);
+    }
+
+    // EFFECTS: returns the one face every fact is set in, at the given size
+    public static Font factFont(int size) {
+        return tracked(new Font(HEAVY, Font.PLAIN, size), FACT_TRACKING);
+    }
+
+    // EFFECTS: returns the given font with the given spacing between letters,
+    //          measured as a fraction of the type size, so the spacing stays
+    //          in proportion however large the text is set
+    private static Font tracked(Font font, float tracking) {
+        Map<TextAttribute, Object> attributes = new HashMap<>();
+        attributes.put(TextAttribute.TRACKING, tracking);
+        return font.deriveFont(attributes);
     }
 
     // REQUIRES: 0 <= alpha <= 255

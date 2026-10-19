@@ -172,14 +172,30 @@ class GoalsPanel extends JPanel {
         return box;
     }
 
-    // EFFECTS: returns this tab's heading row: the section label on the left and
-    //          the completed-only checkbox on the right
+    // EFFECTS: returns the top of the page: the heading and the buttons on one
+    //          row, with the completed-only filter on a second row just above
+    //          the table it applies to
     private JPanel createNorth() {
+        JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 8, 0));
+        buttons.setOpaque(false);
+        buttons.add(UiTheme.createPrimaryButton(new AddGoalAction()));
+        buttons.add(UiTheme.createTertiaryButton(new MarkCompletedAction()));
+        buttons.add(UiTheme.createSecondaryButton(new RemoveGoalAction()));
+
+        JPanel headingRow = new JPanel(new BorderLayout());
+        headingRow.setOpaque(false);
+        headingRow.add(UiTheme.createPageHeading("Goals"), BorderLayout.WEST);
+        headingRow.add(buttons, BorderLayout.EAST);
+
+        JPanel filterRow = new JPanel(new BorderLayout());
+        filterRow.setOpaque(false);
+        filterRow.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
+        filterRow.add(completedOnlyBox, BorderLayout.EAST);
+
         JPanel north = new JPanel(new BorderLayout());
         north.setOpaque(false);
-        north.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
-        north.add(UiTheme.createPageHeading("Goals"), BorderLayout.WEST);
-        north.add(completedOnlyBox, BorderLayout.EAST);
+        north.add(headingRow, BorderLayout.NORTH);
+        north.add(filterRow, BorderLayout.SOUTH);
         return north;
     }
 
@@ -195,19 +211,11 @@ class GoalsPanel extends JPanel {
         return scrollPane;
     }
 
-    // EFFECTS: returns the summary line and this tab's row of buttons, stacked
+    // EFFECTS: returns the summary line that sits under the table
     private JPanel createSouth() {
-        JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 0));
-        buttons.setOpaque(false);
-        buttons.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
-        buttons.add(UiTheme.createPrimaryButton(new AddGoalAction()));
-        buttons.add(UiTheme.createTertiaryButton(new MarkCompletedAction()));
-        buttons.add(UiTheme.createSecondaryButton(new RemoveGoalAction()));
-
         JPanel south = new JPanel(new BorderLayout());
         south.setOpaque(false);
-        south.add(summaryLabel, BorderLayout.NORTH);
-        south.add(buttons, BorderLayout.SOUTH);
+        south.add(summaryLabel, BorderLayout.WEST);
         return south;
     }
 

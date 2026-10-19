@@ -1,7 +1,6 @@
 package ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
 import java.sql.SQLException;
 
@@ -27,7 +26,8 @@ import persistence.TrackerDatabase;
 @ExcludeFromJacocoGeneratedReport
 class HomePanel extends JPanel {
 
-    private static final int QUOTE_SIZE = 64;
+    private static final int SAYING_SIZE = 64;
+    private static final int FACT_SIZE = 46;
 
     private final TrackerDatabase database;
     private final UiTheme.QuoteStyle style;
@@ -49,7 +49,6 @@ class HomePanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(34, 44, 40, 44));
         add(createTop(quote), BorderLayout.NORTH);
         add(createQuote(quote), BorderLayout.CENTER);
-        add(createFooter(), BorderLayout.SOUTH);
 
         refresh();
     }
@@ -76,7 +75,7 @@ class HomePanel extends JPanel {
     private JPanel createTop(Quote quote) {
         JLabel category = new JLabel(quote.getCategory().toUpperCase());
         category.setFont(UiTheme.TINY_BOLD_FONT);
-        category.setForeground(UiTheme.fade(style.getForeground(), 200));
+        category.setForeground(style.getForeground());
 
         JPanel top = new JPanel(new BorderLayout());
         top.setOpaque(false);
@@ -99,13 +98,13 @@ class HomePanel extends JPanel {
     // EFFECTS: returns one total: the figure above its caption, right-aligned
     //          and painted in whichever colour the quote is using
     private JPanel createTotal(JLabel valueLabel, String caption) {
-        valueLabel.setFont(style.font(26));
+        valueLabel.setFont(UiTheme.sayingFont(26));
         valueLabel.setForeground(style.getForeground());
         valueLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         JLabel captionLabel = new JLabel(caption.toUpperCase());
         captionLabel.setFont(UiTheme.TINY_BOLD_FONT);
-        captionLabel.setForeground(UiTheme.fade(style.getForeground(), 150));
+        captionLabel.setForeground(UiTheme.fade(style.getForeground(), 195));
         captionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         JPanel tile = new JPanel(new BorderLayout());
@@ -116,28 +115,20 @@ class HomePanel extends JPanel {
     }
 
     // REQUIRES: quote != null
-    // EFFECTS: returns the quote itself, set large. The HTML wrapper is what
-    //          makes a JLabel wrap onto more than one line.
+    // EFFECTS: returns the quote itself, set large. Sayings arrive in capitals
+    //          and facts in sentence case; the panel prints whichever it is
+    //          given rather than deciding. The HTML wrapper is what makes a
+    //          JLabel wrap onto more than one line.
+    //          Facts run longer and read as prose, so they are set a little
+    //          smaller than a shouted saying.
     private JLabel createQuote(Quote quote) {
-        JLabel label = new JLabel("<html>" + quote.getText().toUpperCase() + "</html>");
-        label.setFont(style.font(QUOTE_SIZE));
+        JLabel label = new JLabel("<html>" + quote.getDisplayText() + "</html>");
+        label.setFont(quote.isFact()
+                ? UiTheme.factFont(FACT_SIZE)
+                : UiTheme.sayingFont(SAYING_SIZE));
         label.setForeground(style.getForeground());
         label.setVerticalAlignment(SwingConstants.CENTER);
         label.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         return label;
-    }
-
-    // EFFECTS: returns the quiet line along the bottom of the page
-    private JLabel createFooter() {
-        JLabel footer = new JLabel("A NEW ONE EVERY TIME YOU OPEN THE APP");
-        footer.setFont(UiTheme.TINY_BOLD_FONT);
-        footer.setForeground(UiTheme.fade(style.getForeground(), 130));
-        return footer;
-    }
-
-    // EFFECTS: returns the background this screen was painted with, so the
-    //          window can match the rest of its frame to it
-    Color getQuoteBackground() {
-        return style.getBackground();
     }
 }

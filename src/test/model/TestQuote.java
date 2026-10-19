@@ -15,11 +15,41 @@ import org.junit.jupiter.api.Test;
 public class TestQuote {
 
     @Test
-    void testConstructor() {
-        Quote quote = new Quote("Catch it first.", "Hard-won advice");
+    void testSaying() {
+        Quote quote = Quote.saying("Catch it first.", "Hard-won advice");
 
         assertEquals("Catch it first.", quote.getText());
         assertEquals("Hard-won advice", quote.getCategory());
+        assertFalse(quote.isFact());
+    }
+
+    @Test
+    void testSayingIsShownInCapitals() {
+        assertEquals("CATCH IT FIRST.",
+                Quote.saying("Catch it first.", "Hard-won advice").getDisplayText());
+    }
+
+    @Test
+    void testFact() {
+        Quote quote = Quote.fact("A disc weighs 175 grams.", "Did you know");
+
+        assertEquals("A disc weighs 175 grams.", quote.getText());
+        assertTrue(quote.isFact());
+    }
+
+    @Test
+    void testFactIsShownAsWritten() {
+        // shouting a measurement reads as odd rather than emphatic
+        assertEquals("A disc weighs 175 grams.",
+                Quote.fact("A disc weighs 175 grams.", "Did you know").getDisplayText());
+    }
+
+    @Test
+    void testThereAreSomeOfEach() {
+        long facts = Quote.all().stream().filter(Quote::isFact).count();
+
+        assertTrue(facts > 0, "no facts in the list");
+        assertTrue(facts < Quote.all().size(), "no sayings in the list");
     }
 
     @Test
@@ -39,9 +69,11 @@ public class TestQuote {
 
     @Test
     void testNoQuoteIsSoLongItWillNotFitOnScreen() {
-        // set at 64pt across roughly three lines, much past this stops fitting
+        // sayings are set at 64pt and facts at 46pt, so a fact can run longer
+        // before it stops fitting on three lines
         for (Quote quote : Quote.all()) {
-            assertTrue(quote.getText().length() <= 70,
+            int limit = quote.isFact() ? 90 : 70;
+            assertTrue(quote.getText().length() <= limit,
                     "too long to set large: " + quote.getText());
         }
     }
@@ -76,6 +108,6 @@ public class TestQuote {
     @Test
     void testTheListCannotBeChangedByCallers() {
         assertThrows(UnsupportedOperationException.class,
-                () -> Quote.all().add(new Quote("sneaky", "nope")));
+                () -> Quote.all().add(Quote.saying("sneaky", "nope")));
     }
 }

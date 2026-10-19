@@ -72,9 +72,9 @@ class SessionsPanel extends JPanel {
 
         setBackground(UiTheme.PAPER);
         setBorder(BorderFactory.createEmptyBorder(26, 26, 14, 26));
-        add(UiTheme.createPageHeading("Sessions"), BorderLayout.NORTH);
+        add(createNorth(), BorderLayout.NORTH);
         add(createScrollPane(), BorderLayout.CENTER);
-        add(createSouth(), BorderLayout.SOUTH);
+        add(createChartBlock(), BorderLayout.SOUTH);
         refresh();
     }
 
@@ -146,20 +146,21 @@ class SessionsPanel extends JPanel {
         return scrollPane;
     }
 
-    // EFFECTS: returns everything below the table: the chart of monthly
-    //          minutes with the totals beside its heading, then the buttons
-    private JPanel createSouth() {
-        JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 8, 0));
+    // EFFECTS: returns the top of the page: the heading on the left and the
+    //          buttons on the right, so the main action sits beside the
+    //          heading rather than below a chart at the far end of the page
+    private JPanel createNorth() {
+        JPanel buttons = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 8, 0));
         buttons.setOpaque(false);
-        buttons.setBorder(BorderFactory.createEmptyBorder(14, 0, 0, 0));
         buttons.add(UiTheme.createPrimaryButton(new AddSessionAction()));
         buttons.add(UiTheme.createSecondaryButton(new RemoveSessionAction()));
 
-        JPanel south = new JPanel(new BorderLayout());
-        south.setOpaque(false);
-        south.add(createChartBlock(), BorderLayout.NORTH);
-        south.add(buttons, BorderLayout.SOUTH);
-        return south;
+        JPanel north = new JPanel(new BorderLayout());
+        north.setOpaque(false);
+        north.setBorder(BorderFactory.createEmptyBorder(0, 0, 14, 0));
+        north.add(UiTheme.createPageHeading("Sessions"), BorderLayout.WEST);
+        north.add(buttons, BorderLayout.EAST);
+        return north;
     }
 
     // EFFECTS: returns the chart of minutes per month, with its heading on the
